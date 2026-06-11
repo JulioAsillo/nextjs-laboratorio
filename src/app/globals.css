@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --surface: #faf8ff;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f2f3ff;
+  --surface-container: #eaedff;
+  --surface-container-high: #e2e7ff;
+  --on-surface: #131b2e;
+  --on-surface-variant: #3e484f;
+  --inverse-surface: #283044;
+  --inverse-on-surface: #eef0ff;
+  --outline: #6e7880;
+  --outline-variant: #bdc8d0;
+  --primary: #006386;
+  --on-primary: #ffffff;
+  --primary-container: #007da8;
+  --secondary: #006d38;
+  --tertiary: #964400;
+  --error: #ba1a1a;
+  --primary-fixed-dim: #78d1ff;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--surface);
+  color: var(--on-surface);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar discreta para zonas de tabla densas */
+.thin-scroll::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: var(--outline-variant);
+  border-radius: 9999px;
+}
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
