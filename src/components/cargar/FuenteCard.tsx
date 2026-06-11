@@ -1,20 +1,10 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  UploadCloud,
-  CheckCircle2,
-  XCircle,
-  Loader2,
-  FileSpreadsheet,
-  X,
-  ChevronDown,
-  Files,
-  CloudUpload,
-  Check,
-  Table2,
-  RefreshCw,
-  Database,
+  UploadCloud, CheckCircle2, XCircle, Loader2, FileSpreadsheet,
+  X, ChevronDown, Files, CloudUpload, Check, Table2, RefreshCw,
+  Database, WifiOff,
 } from 'lucide-react';
 import clsx from 'clsx';
 import type { Fuente, UploadSlot } from '@/config/fuentes';
@@ -26,24 +16,45 @@ import { Button } from '@/components/ui/Button';
 
 const nf = new Intl.NumberFormat('es-PE');
 
-/* ============================ Card ============================ */
+/* ─── localStorage helpers ─────────────────────────────────────── */
+const LS_KEY = 'itsecops-upload-status-v1';
 
+function lsRead(): Record<string, Record<string, boolean>> {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) ?? '{}'); }
+  catch { return {}; }
+}
+function lsMarkUploaded(fuenteId: string, fileName: string) {
+  const prev = lsRead();
+  const next = { ...prev, [fuenteId]: { ...(prev[fuenteId] ?? {}), [fileName]: true } };
+  localStorage.setItem(LS_KEY, JSON.stringify(next));
+}
+function lsSlotUploaded(fuenteId: string, fileName: string): boolean {
+  return lsRead()[fuenteId]?.[fileName] === true;
+}
+
+/* ─── Card ──────────────────────────────────────────────────────── */
 interface FuenteCardProps {
-  fuente: Fuente;
-  /** Filas cargadas en memoria para su appsKey. `undefined` = aún sin cargar. */
+  fuente:       Fuente;
   loadedCount?: number;
-  /** Este appsKey se está cargando ahora. */
   loadingData?: boolean;
-  /** Abrir el modal con el DataTable. */
-  onView?: () => void;
-  /** Cargar (GET) solo esta fuente. */
-  onLoadOne?: () => void;
+  onView?:      () => void;
+  onLoadOne?:   () => void;
 }
 
 export function FuenteCard({ fuente, loadedCount, loadingData, onView, onLoadOne }: FuenteCardProps) {
   const multiSlot = fuente.slots.length > 1;
-  const hasData = (loadedCount ?? -1) >= 0;
-  const canView = (loadedCount ?? 0) > 0;
+  const hasData   = (loadedCount ?? -1) >= 0;
+  const canView   = (loadedCount ?? 0) > 0;
+
+  const [allSlotsUploaded, setAllSlotsUploaded] = useState(false);
+
+  useEffect(() => {
+    setAllSlotsUploaded(fuente.slots.every((s) => lsSlotUploaded(fuente.id, s.fileName)));
+  }, [fuente]);
+
+  const handleSlotUploaded = useCallback(() => {
+    setAllSlotsUploaded(fuente.slots.every((s) => lsSlotUploaded(fuente.id, s.fileName)));
+  }, [fuente]);
 
   return (
     <div className="flex flex-col rounded-lg border border-outline-variant bg-surface-container-lowest p-4 shadow-ambient transition">
@@ -53,29 +64,53 @@ export function FuenteCard({ fuente, loadedCount, loadingData, onView, onLoadOne
           <FileSpreadsheet size={18} className="text-primary" />
           <h3 className="text-headline-sm text-on-surface">{fuente.label}</h3>
         </div>
-        {hasData && (
-          <span className="inline-flex items-center gap-1 rounded bg-secondary/10 px-1.5 py-0.5 text-label-caps uppercase text-secondary">
-            <Database size={11} /> {nf.format(loadedCount ?? 0)}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5">
+          {allSlotsUploaded ? (
+            <span
+              title="Archivos subidos"
+              className="flex items-center gap-1 rounded-full bg-secondary/10 px-2 py-0.5 text-label-caps uppercase text-secondary"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-secondary opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-secondary" />
+              </span>
+              En vivo
+            </span>
+          ) : (
+            <span
+              title="Sin archivos subidos"
+              className="flex items-center gap-1 rounded-full bg-surface-container px-2 py-0.5 text-label-caps uppercase text-on-surface-variant/50"
+            >
+              <WifiOff size={11} />
+              Sin subir
+            </span>
+          )}
+          {hasData && (
+            <span className="inline-flex items-center gap-1 rounded bg-secondary/10 px-1.5 py-0.5 text-label-caps uppercase text-secondary">
+              <Database size={11} /> {nf.format(loadedCount ?? 0)}
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Slots de carga */}
+      {/* Slots */}
       <div className={clsx('mt-3 flex flex-col gap-3', multiSlot && 'gap-4')}>
         {fuente.slots.map((slot) => (
-          <SlotUploader key={slot.fileName} slot={slot} showLabel={multiSlot} />
+          <SlotUploader
+            key={slot.fileName}
+            slot={slot}
+            fuenteId={fuente.id}
+            showLabel={multiSlot}
+            onUploaded={handleSlotUploaded}
+          />
         ))}
       </div>
 
-      {/* Footer: datos */}
+      {/* Footer */}
       {fuente.appsKey ? (
         <div className="mt-4 flex items-center justify-between gap-2 border-t border-outline-variant/70 pt-3">
           <span className="text-label-caps uppercase text-on-surface-variant">
-            {loadingData
-              ? 'Cargando…'
-              : hasData
-                ? `${nf.format(loadedCount ?? 0)} registros`
-                : 'Sin cargar'}
+            {loadingData ? 'Cargando…' : canView ? 'Información consultada' : 'Sin cargar'}
           </span>
           <div className="flex items-center gap-2">
             <button
@@ -94,6 +129,7 @@ export function FuenteCard({ fuente, loadedCount, loadingData, onView, onLoadOne
               icon={<Table2 size={15} />}
               onClick={onView}
               disabled={!canView || loadingData}
+              title={!canView ? 'Primero carga los datos con el botón de recarga' : undefined}
             >
               Ver datos
             </Button>
@@ -108,81 +144,75 @@ export function FuenteCard({ fuente, loadedCount, loadingData, onView, onLoadOne
   );
 }
 
-/* ======================== Slot de carga ======================== */
-
-type Status = 'validating' | 'ok' | 'error';
+/* ─── SlotUploader ──────────────────────────────────────────────── */
+type Status       = 'validating' | 'ok' | 'error';
 type UploadStatus = 'idle' | 'uploading' | 'uploaded' | 'error';
 
 interface FileEntry {
-  id: string;
-  file: File;
-  status: Status;
-  validation?: ColumnValidation;
-  error?: string;
-  uploadStatus: UploadStatus;
-  uploadError?: string;
+  id:             string;
+  file:           File;
+  status:         Status;
+  validation?:    ColumnValidation;
+  error?:         string;
+  uploadStatus:   UploadStatus;
+  uploadError?:   string;
   uploadMessage?: string;
 }
 
-function SlotUploader({ slot, showLabel }: { slot: UploadSlot; showLabel: boolean }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [dragOver, setDragOver] = useState(false);
-  const [showCols, setShowCols] = useState(false);
-  const [files, setFiles] = useState<FileEntry[]>([]);
-  const [uploading, setUploading] = useState(false);
+interface SlotUploaderProps {
+  slot:       UploadSlot;
+  fuenteId:   string;
+  showLabel:  boolean;
+  onUploaded: () => void;
+}
+
+function SlotUploader({ slot, fuenteId, showLabel, onUploaded }: SlotUploaderProps) {
+  const inputRef                        = useRef<HTMLInputElement>(null);
+  const [dragOver,     setDragOver]     = useState(false);
+  const [showCols,     setShowCols]     = useState(false);
+  const [files,        setFiles]        = useState<FileEntry[]>([]);
+  const [uploading,    setUploading]    = useState(false);
+  const [prevUploaded, setPrevUploaded] = useState(false);
+
+  useEffect(() => {
+    setPrevUploaded(lsSlotUploaded(fuenteId, slot.fileName));
+  }, [fuenteId, slot.fileName]);
 
   const pendientes = useMemo(
     () => files.filter((f) => f.status === 'ok' && f.uploadStatus !== 'uploaded'),
     [files],
   );
 
-  const validateFile = useCallback(
-    async (file: File): Promise<FileEntry> => {
-      const id = `${file.name}-${file.size}-${Math.random().toString(36).slice(2)}`;
-      const base = { id, file, uploadStatus: 'idle' as UploadStatus };
-      if (!isAllowedFormat(file.name)) {
-        return { ...base, status: 'error', error: 'Formato no permitido (usa .csv, .xls o .xlsx).' };
-      }
-      try {
-        const headers = await readHeaders(file);
-        if (headers.length === 0) {
-          return { ...base, status: 'error', error: 'No se encontraron cabeceras en la primera fila.' };
-        }
-        const validation = validateColumns(slot.columns, headers);
-        return { ...base, status: validation.ok ? 'ok' : 'error', validation };
-      } catch {
-        return { ...base, status: 'error', error: 'No se pudo leer el archivo.' };
-      }
-    },
-    [slot.columns],
-  );
+  const validateFile = useCallback(async (file: File): Promise<FileEntry> => {
+    const id   = `${file.name}-${file.size}-${Math.random().toString(36).slice(2)}`;
+    const base = { id, file, uploadStatus: 'idle' as UploadStatus };
+    if (!isAllowedFormat(file.name))
+      return { ...base, status: 'error', error: 'Formato no permitido (usa .csv, .xls o .xlsx).' };
+    try {
+      const headers = await readHeaders(file);
+      if (headers.length === 0)
+        return { ...base, status: 'error', error: 'No se encontraron cabeceras en la primera fila.' };
+      const validation = validateColumns(slot.columns, headers);
+      return { ...base, status: validation.ok ? 'ok' : 'error', validation };
+    } catch {
+      return { ...base, status: 'error', error: 'No se pudo leer el archivo.' };
+    }
+  }, [slot.columns]);
 
-  const handleFiles = useCallback(
-    async (list: FileList | null) => {
-      if (!list || list.length === 0) return;
-      const incoming = Array.from(list);
-      const selected = slot.multiple ? incoming : incoming.slice(0, 1);
-
-      const placeholders: FileEntry[] = selected.map((file, i) => ({
-        id: `tmp-${Date.now()}-${i}`,
-        file,
-        status: 'validating',
-        uploadStatus: 'idle',
-      }));
-      setFiles((prev) => (slot.multiple ? [...prev, ...placeholders] : placeholders));
-
-      const results = await Promise.all(selected.map(validateFile));
-      setFiles((prev) => {
-        const withoutTmp = prev.filter((f) => !f.id.startsWith('tmp-'));
-        return slot.multiple ? [...withoutTmp, ...results] : results;
-      });
-    },
-    [slot.multiple, validateFile],
-  );
-
-  function removeFile(id: string) {
-    setFiles((prev) => prev.filter((f) => f.id !== id));
-  }
+  const handleFiles = useCallback(async (list: FileList | null) => {
+    if (!list || list.length === 0) return;
+    const incoming = Array.from(list);
+    const selected = slot.multiple ? incoming : incoming.slice(0, 1);
+    const placeholders: FileEntry[] = selected.map((file, i) => ({
+      id: `tmp-${Date.now()}-${i}`, file, status: 'validating', uploadStatus: 'idle',
+    }));
+    setFiles((prev) => (slot.multiple ? [...prev, ...placeholders] : placeholders));
+    const results = await Promise.all(selected.map(validateFile));
+    setFiles((prev) => {
+      const withoutTmp = prev.filter((f) => !f.id.startsWith('tmp-'));
+      return slot.multiple ? [...withoutTmp, ...results] : results;
+    });
+  }, [slot.multiple, validateFile]);
 
   const setEntry = useCallback((id: string, patch: Partial<FileEntry>) => {
     setFiles((prev) => prev.map((f) => (f.id === id ? { ...f, ...patch } : f)));
@@ -197,6 +227,9 @@ function SlotUploader({ slot, showLabel }: { slot: UploadSlot; showLabel: boolea
         try {
           const result = await uploadFuente(slot.fileName, entry.file);
           setEntry(entry.id, { uploadStatus: 'uploaded', uploadMessage: result.mensaje });
+          lsMarkUploaded(fuenteId, slot.fileName);
+          setPrevUploaded(true);
+          onUploaded();
         } catch (err) {
           setEntry(entry.id, {
             uploadStatus: 'error',
@@ -213,7 +246,14 @@ function SlotUploader({ slot, showLabel }: { slot: UploadSlot; showLabel: boolea
     <div className={clsx(showLabel && 'rounded-md border border-outline-variant/60 bg-surface p-3')}>
       {showLabel && (
         <div className="mb-2 flex items-center gap-1.5 text-label-caps uppercase text-on-surface-variant">
-          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+          {prevUploaded ? (
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-secondary opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-secondary" />
+            </span>
+          ) : (
+            <span className="h-1.5 w-1.5 rounded-full bg-outline-variant" />
+          )}
           {slot.label}
           {slot.multiple && (
             <span className="inline-flex items-center gap-1 rounded bg-primary/10 px-1.5 py-0.5 text-primary">
@@ -223,7 +263,6 @@ function SlotUploader({ slot, showLabel }: { slot: UploadSlot; showLabel: boolea
         </div>
       )}
 
-      {/* Columnas requeridas (colapsable) */}
       <button
         type="button"
         onClick={() => setShowCols((s) => !s)}
@@ -240,29 +279,18 @@ function SlotUploader({ slot, showLabel }: { slot: UploadSlot; showLabel: boolea
       {showCols && (
         <div className="mt-2 flex flex-wrap gap-1">
           {slot.columns.map((c) => (
-            <span
-              key={c}
-              className="rounded bg-surface-container-low px-1.5 py-0.5 font-mono text-[11px] text-on-surface-variant"
-            >
+            <span key={c} className="rounded bg-surface-container-low px-1.5 py-0.5 font-mono text-[11px] text-on-surface-variant">
               {c}
             </span>
           ))}
         </div>
       )}
 
-      {/* Dropzone */}
       <div
         onClick={() => inputRef.current?.click()}
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragOver(true);
-        }}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDragOver(false);
-          void handleFiles(e.dataTransfer.files);
-        }}
+        onDrop={(e) => { e.preventDefault(); setDragOver(false); void handleFiles(e.dataTransfer.files); }}
         role="button"
         tabIndex={0}
         className={clsx(
@@ -280,23 +308,17 @@ function SlotUploader({ slot, showLabel }: { slot: UploadSlot; showLabel: boolea
           accept={FORMATOS.join(',')}
           multiple={slot.multiple}
           className="hidden"
-          onChange={(e) => {
-            void handleFiles(e.target.files);
-            e.target.value = '';
-          }}
+          onChange={(e) => { void handleFiles(e.target.files); e.target.value = ''; }}
         />
       </div>
 
-      {/* Lista de archivos */}
       {files.length > 0 && (
         <ul className="mt-3 space-y-2">
           {files.map((f) => (
             <li key={f.id} className="rounded-md border border-outline-variant/70 bg-surface-container-lowest p-2">
               <div className="flex items-center gap-2">
                 {f.status === 'validating' && <Loader2 size={15} className="animate-spin text-primary" />}
-                {f.status === 'ok' && f.uploadStatus !== 'uploading' && (
-                  <CheckCircle2 size={15} className="text-secondary" />
-                )}
+                {f.status === 'ok' && f.uploadStatus !== 'uploading' && <CheckCircle2 size={15} className="text-secondary" />}
                 {f.uploadStatus === 'uploading' && <Loader2 size={15} className="animate-spin text-primary" />}
                 {f.status === 'error' && <XCircle size={15} className="text-error" />}
                 <span className="flex-1 truncate text-body-md text-on-surface">{f.file.name}</span>
@@ -308,7 +330,7 @@ function SlotUploader({ slot, showLabel }: { slot: UploadSlot; showLabel: boolea
                 {f.uploadStatus !== 'uploaded' && (
                   <button
                     type="button"
-                    onClick={() => removeFile(f.id)}
+                    onClick={() => setFiles((p) => p.filter((e) => e.id !== f.id))}
                     className="text-on-surface-variant hover:text-error"
                     aria-label="Quitar"
                   >
@@ -316,7 +338,6 @@ function SlotUploader({ slot, showLabel }: { slot: UploadSlot; showLabel: boolea
                   </button>
                 )}
               </div>
-
               {f.status === 'error' && f.error && (
                 <p className="mt-1 pl-7 text-body-md text-error">{f.error}</p>
               )}
@@ -341,7 +362,6 @@ function SlotUploader({ slot, showLabel }: { slot: UploadSlot; showLabel: boolea
         </ul>
       )}
 
-      {/* Botón de subida */}
       {pendientes.length > 0 && (
         <div className="mt-3">
           <Button

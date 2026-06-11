@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useSWRConfig } from 'swr';
-import { Loader2, DownloadCloud } from 'lucide-react';
+import { Loader2, DownloadCloud, CheckCircle2 } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { FuenteCard } from '@/components/cargar/FuenteCard';
 import { DatosModal } from '@/components/cargar/DatosModal';
@@ -14,42 +14,36 @@ const GROUPS = ['Aplicaciones', 'Otros Reportes'] as const;
 
 interface ModalState {
   appsKey: string;
-  title: string;
+  title:   string;
 }
 
 export default function CargarInformacionPage() {
   const { mutate } = useSWRConfig();
 
-  // Conteo de filas por appsKey ya cargado en memoria (caché SWR).
-  const [loaded, setLoaded] = useState<Record<string, number>>({});
+  const [loaded,     setLoaded]     = useState<Record<string, number>>({});
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
-  const [bulk, setBulk] = useState({ active: false, done: 0, total: 0 });
-  const [modal, setModal] = useState<ModalState | null>(null);
+  const [bulk,       setBulk]       = useState({ active: false, done: 0, total: 0 });
+  const [modal,      setModal]      = useState<ModalState | null>(null);
 
-  // appsKeys disponibles (las fuentes sin appsKey, como Entra ID, se omiten).
   const appsKeys = useMemo(
     () => fuentes.map((f) => f.appsKey).filter((k): k is string => !!k),
     [],
   );
 
-  const loadOne = useCallback(
-    async (appsKey: string) => {
-      setLoadingKey(appsKey);
-      try {
-        const res = (await mutate(['datos', appsKey], fetchDatosApp(appsKey), {
-          revalidate: false,
-        })) as DatosResult | undefined;
-        setLoaded((prev) => ({ ...prev, [appsKey]: res?.rows.length ?? 0 }));
-      } catch {
-        setLoaded((prev) => ({ ...prev, [appsKey]: prev[appsKey] ?? 0 }));
-      } finally {
-        setLoadingKey(null);
-      }
-    },
-    [mutate],
-  );
+  const loadOne = useCallback(async (appsKey: string) => {
+    setLoadingKey(appsKey);
+    try {
+      const res = (await mutate(['datos', appsKey], fetchDatosApp(appsKey), {
+        revalidate: false,
+      })) as DatosResult | undefined;
+      setLoaded((prev) => ({ ...prev, [appsKey]: res?.rows.length ?? 0 }));
+    } catch {
+      setLoaded((prev) => ({ ...prev, [appsKey]: prev[appsKey] ?? 0 }));
+    } finally {
+      setLoadingKey(null);
+    }
+  }, [mutate]);
 
-  // Carga secuencial de todas las fuentes (una por una).
   async function handleLoadAll() {
     if (bulk.active) return;
     setBulk({ active: true, done: 0, total: appsKeys.length });
@@ -61,6 +55,7 @@ export default function CargarInformacionPage() {
   }
 
   const withData = appsKeys.filter((k) => (loaded[k] ?? 0) > 0).length;
+  const allDone  = withData === appsKeys.length;
 
   return (
     <AppShell
@@ -68,13 +63,23 @@ export default function CargarInformacionPage() {
       breadcrumb={['Certificación de Usuarios', 'Cargar Información']}
       actions={
         <>
-          <span className="rounded-md bg-surface-container px-3 py-1.5 text-body-md text-on-surface-variant">
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-body-md ${
+              allDone
+                ? 'bg-secondary/10 text-secondary'
+                : 'bg-surface-container text-on-surface-variant'
+            }`}
+          >
+            {allDone && <CheckCircle2 size={14} />}
             {bulk.active
-              ? `Cargando ${bulk.done}/${bulk.total}…`
-              : `${withData}/${appsKeys.length} fuentes con datos`}
+              ? `Cargando ${bulk.done} / ${bulk.total}…`
+              : `${withData} / ${appsKeys.length} fuentes con datos`}
           </span>
+
           <Button
-            icon={bulk.active ? <Loader2 size={16} className="animate-spin" /> : <DownloadCloud size={16} />}
+            icon={bulk.active
+              ? <Loader2 size={16} className="animate-spin" />
+              : <DownloadCloud size={16} />}
             onClick={handleLoadAll}
             disabled={bulk.active}
           >
