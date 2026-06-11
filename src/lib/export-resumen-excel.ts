@@ -2,8 +2,9 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import type { Resumen, ResumenRow } from './resumen';
 import { matchesH1, matchesH2 } from './resumen';
-import { columns, KEY_ESCENARIO } from './columns';
+import { h1Columns, h2Columns, KEY_ESCENARIO, type ColumnDef } from './columns';
 import { colorGroups, palette } from './theme';
+import { writeCell } from './excel-format';
 import type { HallazgoAplicacion } from '@/types/hallazgo';
 
 const argb = (hex: string) => 'FF' + hex.replace('#', '').toUpperCase();
@@ -12,10 +13,10 @@ const SHEET_H1 = 'H1_APLICACIONES';
 const SHEET_H2 = 'H2_APLICACIONES';
 
 const FILL = {
-  title: palette.inverseSurface, // navy
-  h1: palette.primary, // azul (cesados)
-  h2: palette.secondary, // verde (no identificados)
-  comentario: palette.outline, // gris
+  title: palette.inverseSurface,
+  h1: palette.primary,
+  h2: palette.secondary,
+  comentario: palette.outline,
   total: '#eaedff',
 };
 
@@ -31,13 +32,13 @@ function styleHeader(cell: ExcelJS.Cell, fillHex: string, textHex = '#ffffff') {
   cell.border = thinBorder('#ffffff');
 }
 
-/** Escribe una hoja de DETALLE (mismas columnas/colores que el export principal). */
-function writeDetailSheet(ws: ExcelJS.Worksheet, rows: HallazgoAplicacion[]) {
+/** Hoja de DETALLE con el set de columnas indicado (H1 o H2) y fechas reales. */
+function writeDetailSheet(ws: ExcelJS.Worksheet, rows: HallazgoAplicacion[], cols: ColumnDef[]) {
   ws.views = [{ state: 'frozen', ySplit: 1 }];
-  ws.columns = columns.map((c) => ({ key: c.key, width: c.width ?? 18 }));
+  ws.columns = cols.map((c) => ({ key: c.key, width: c.width ?? 18 }));
 
   const header = ws.getRow(1);
-  columns.forEach((col, idx) => {
+  cols.forEach((col, idx) => {
     const cell = header.getCell(idx + 1);
     const g = colorGroups[col.group];
     cell.value = col.header;
@@ -46,31 +47,27 @@ function writeDetailSheet(ws: ExcelJS.Worksheet, rows: HallazgoAplicacion[]) {
   header.height = 30;
 
   rows.forEach((r) => {
-    const values: Record<string, string> = {};
-    columns.forEach((col) => {
-      const raw = r[col.key];
-      values[col.key] = raw == null ? '' : String(raw);
+    const excelRow = ws.addRow([]);
+    cols.forEach((col, idx) => {
+      writeCell(excelRow.getCell(idx + 1), r[col.key], col.isDate);
     });
-    ws.addRow(values);
   });
 
-  ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: columns.length } };
+  ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: cols.length } };
 }
 
-/** Escribe la hoja de resumen "Escenarios" con enlaces a las hojas H1/H2. */
+/** Hoja "Escenarios" (resumen con enlaces a H1/H2). Sin cambios. */
 function writeEscenariosSheet(ws: ExcelJS.Worksheet, resumen: Resumen) {
   ws.views = [{ state: 'frozen', ySplit: 6, xSplit: 2 }];
   ws.getColumn(2).width = 24;
   for (let c = 3; c <= 8; c++) ws.getColumn(c).width = 16;
   ws.getColumn(9).width = 32;
 
-  // Fila 3: título
   ws.mergeCells('C3:H3');
   ws.getCell('C3').value = 'APLICACIONES SOX VIDA';
   styleHeader(ws.getCell('C3'), FILL.title);
   ws.getRow(3).height = 24;
 
-  // Fila 4: títulos de escenario
   ws.mergeCells('C4:E4');
   ws.getCell('C4').value = 'Identificación de usuarios cesados';
   styleHeader(ws.getCell('C4'), FILL.h1);
@@ -79,7 +76,6 @@ function writeEscenariosSheet(ws: ExcelJS.Worksheet, resumen: Resumen) {
   styleHeader(ws.getCell('F4'), FILL.h2);
   ws.getRow(4).height = 30;
 
-  // Fila 5: códigos con HIPERVÍNCULO a su hoja
   ws.mergeCells('C5:E5');
   ws.getCell('C5').value = { text: SHEET_H1, hyperlink: `#'${SHEET_H1}'!A1` };
   styleHeader(ws.getCell('C5'), FILL.h1);
@@ -90,7 +86,6 @@ function writeEscenariosSheet(ws: ExcelJS.Worksheet, resumen: Resumen) {
   styleHeader(ws.getCell('F5'), FILL.h2);
   ws.getCell('F5').font = { color: { argb: argb('#ffffff') }, bold: true, underline: true };
 
-  // Fila 6: sub-cabeceras
   ws.getCell('B6').value = 'Aplicación';
   styleHeader(ws.getCell('B6'), FILL.title);
   const sub = ['N° Hallazgos', 'Hallazgos GDH', 'Hallazgos ACCESOS'];
@@ -106,7 +101,6 @@ function writeEscenariosSheet(ws: ExcelJS.Worksheet, resumen: Resumen) {
   styleHeader(ws.getCell('I6'), FILL.comentario);
   ws.getRow(6).height = 28;
 
-  // Datos
   const writeDataRow = (rowIdx: number, r: ResumenRow, isTotal = false) => {
     const values = [r.aplicacion, r.h1Total, r.h1Gdh, r.h1Accesos, r.h2Total, r.h2Gdh, r.h2Accesos, ''];
     values.forEach((val, i) => {
@@ -126,10 +120,6 @@ function writeEscenariosSheet(ws: ExcelJS.Worksheet, resumen: Resumen) {
   writeDataRow(row, resumen.total, true);
 }
 
-/**
- * Genera el libro completo: hoja "Escenarios" (resumen) + hojas "H1_APLICACIONES" y
- * "H2_APLICACIONES" (detalle filtrado por escenario), con enlaces internos desde el resumen.
- */
 export async function exportResumenExcel(
   resumen: Resumen,
   detailRows: HallazgoAplicacion[],
@@ -147,8 +137,8 @@ export async function exportResumenExcel(
 
   const rowsH1 = detailRows.filter((r) => matchesH1((r[KEY_ESCENARIO] ?? '').trim()));
   const rowsH2 = detailRows.filter((r) => matchesH2((r[KEY_ESCENARIO] ?? '').trim()));
-  writeDetailSheet(wsH1, rowsH1);
-  writeDetailSheet(wsH2, rowsH2);
+  writeDetailSheet(wsH1, rowsH1, h1Columns);
+  writeDetailSheet(wsH2, rowsH2, h2Columns);
 
   const buf = await wb.xlsx.writeBuffer();
   saveAs(

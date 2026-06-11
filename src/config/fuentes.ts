@@ -143,8 +143,7 @@ export const fuentes: Fuente[] = [
     slots: [{ fileName: 'dni_vs_usuarios', columns: ['USERNAME', 'TIPO', 'USUARIO', 'DNI', 'COMENTARIO'] }],
   },
   {
-    // Sin appsKey: aún no existe GET. Solo carga por ahora.
-    id: 'entra-id', label: 'Entra ID', group: 'Otros Reportes',
+    id: 'entra-id', label: 'Entra ID', group: 'Otros Reportes', appsKey: 'entraid',
     slots: [{ fileName: 'entra_id', columns: ['ID', 'SIGNINACTIVITY', 'USERPRINCIPALNAME', 'MAIL', 'ACCOUNTENABLED'] }],
   },
   {

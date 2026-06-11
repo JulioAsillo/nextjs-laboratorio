@@ -90,6 +90,11 @@ const LABEL_OVERRIDES: Record<string, string> = {
   tipo_usuario: 'Tipo Usuario', comentario: 'Comentario',
   // tickets
   numero_ticket: 'N° Ticket', elemento: 'Elemento',
+  // entra id
+  accountEnabled: 'Cuenta Habilitada',
+  lastSignInDateTime: 'Último Inicio Sesión',
+  lastNonInteractiveSignInDateTime: 'Inicio No Interactivo',
+  lastActivityDateTime: 'Última Actividad',
 };
 
 function humanize(key: string): string {

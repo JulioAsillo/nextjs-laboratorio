@@ -17,7 +17,11 @@ export interface Resumen {
 }
 
 /** H1: el escenario CONTIENE "cesado activo" (cubre "Cesado Activo" y "Cesado Activo Ticket"). */
-export const matchesH1 = (esc: string) => esc.toLowerCase().includes('cesado activo');
+/** H1: escenario "Cesado Activo" EXCLUYENDO "Cesado Activo Ticket". */
+export const matchesH1 = (esc: string) => {
+  const l = esc.toLowerCase();
+  return l.includes('cesado activo') && !l.includes('cesado activo ticket');
+};
 /** H2: el escenario CONTIENE "no identificado". Agrega más términos aquí si surgen. */
 export const matchesH2 = (esc: string) => esc.toLowerCase().includes('no identificado');
 
