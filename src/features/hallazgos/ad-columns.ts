@@ -23,12 +23,12 @@ export const adColumns: ColumnDef[] = [
   { key: 'COMENTARIO_dnivsuser', header: 'COMENTARIO_dnivsuser', group: 'C2', widthPx: 240 },
 
   { key: 'Descripción', header: 'Descripción', group: 'C1', widthPx: 220 },
-  { key: 'Fecha Creación', header: 'Fecha Creación', group: 'C1', widthPx: 160 },
-  { key: 'Fecha Cambio', header: 'Fecha Cambio', group: 'C1', widthPx: 160 },
+  { key: 'Fecha Creación', header: 'Fecha Creación', group: 'C1', widthPx: 160, isDate: true },
+  { key: 'Fecha Cambio', header: 'Fecha Cambio', group: 'C1', widthPx: 160, isDate: true },
 
   { key: 'passwordneverexpires', header: 'passwordneverexpires', group: 'C3', widthPx: 180 },
   { key: 'cannotchangepassword', header: 'cannotchangepassword', group: 'C3', widthPx: 190 },
-  { key: 'passwordlastset', header: 'passwordlastset', group: 'C3', widthPx: 170 },
+  { key: 'passwordlastset', header: 'passwordlastset', group: 'C3', widthPx: 170, isDate: true },
 
   { key: 'title', header: 'title', group: 'C1', widthPx: 140 },
   { key: 'Department', header: 'Department', group: 'C1', widthPx: 160 },
@@ -36,16 +36,16 @@ export const adColumns: ColumnDef[] = [
   { key: 'StreetAddress', header: 'StreetAddress', group: 'C1', widthPx: 180 },
   { key: 'Estado', header: 'Estado', group: 'C1', widthPx: 120 },
 
-  { key: 'Fecha Ultimo Login AD', header: 'Fecha Ultimo Login AD', group: 'C4', widthPx: 190 },
-  { key: 'Fecha Ultimo Login Entra', header: 'Fecha Ultimo Login Entra', group: 'C4', widthPx: 200 },
+  { key: 'Fecha Ultimo Login AD', header: 'Fecha Ultimo Login AD', group: 'C4', widthPx: 190, isDate: true },
+  { key: 'Fecha Ultimo Login Entra', header: 'Fecha Ultimo Login Entra', group: 'C4', widthPx: 200, isDate: true },
 
   { key: 'Activo GDH', header: 'Activo GDH', group: 'C5', widthPx: 120 },
-  { key: 'Fecha Alta', header: 'Fecha Alta', group: 'C5', widthPx: 150 },
+  { key: 'Fecha Alta', header: 'Fecha Alta', group: 'C5', widthPx: 150, isDate: true },
   { key: 'Cesado GDH', header: 'Cesado GDH', group: 'C5', widthPx: 120 },
-  { key: 'Fecha Cese', header: 'Fecha Cese', group: 'C5', widthPx: 150 },
+  { key: 'Fecha Cese', header: 'Fecha Cese', group: 'C5', widthPx: 150, isDate: true },
 
   { key: 'Ticket Cese', header: 'Ticket Cese', group: 'C6', widthPx: 150 },
-  { key: 'Fecha Cierre Ticket Cese', header: 'Fecha Cierre Ticket Cese', group: 'C6', widthPx: 210 },
+  { key: 'Fecha Cierre Ticket Cese', header: 'Fecha Cierre Ticket Cese', group: 'C6', widthPx: 210, isDate: true },
   { key: 'Escenario', header: 'Escenario', group: 'C6', widthPx: 260 },
   { key: 'Cesado Activo', header: 'Cesado Activo', group: 'C6', widthPx: 130 },
   { key: 'Login Post Cese', header: 'Login Post Cese', group: 'C6', widthPx: 150 },
@@ -54,4 +54,7 @@ export const adColumns: ColumnDef[] = [
   { key: 'Deshabilitado 180d', header: 'Deshabilitado 180d', group: 'C6', widthPx: 170 },
   { key: 'Contraseña no Expira', header: 'Contraseña no Expira', group: 'C6', widthPx: 180 },
   { key: 'No Puede Cambiar Contraseña', header: 'No Puede Cambiar Contraseña', group: 'C6', widthPx: 220 },
+
+  { key: 'Responsable', header: 'Responsable', group: 'C6', widthPx: 160 },
+  { key: 'Comentario', header: 'Comentario', group: 'C6', widthPx: 240 },
 ];
