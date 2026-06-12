@@ -120,7 +120,7 @@ export const fuentes: Fuente[] = [
   },
   {
     id: 'sox-vida', label: 'Sox Vida', group: 'Aplicaciones', appsKey: 'sox-vida',
-    slots: [{ fileName: 'usuarios_sox_vida', columns: ['IDUSUARIO', 'NOMBRE_APLICACION', 'CODIGO_ROL', 'APELLIDO_PATERNO', 'APELLIDO_MATERNO', 'NOMBRES', 'NOMBRE_ROL', 'BLOQUEADO', 'AUDITORIA_CREACION', 'AUDITORIA_M'] }],
+    slots: [{ fileName: 'usuarios_sox_vida', columns: ['IDUSUARIO', 'NOMBRE_APLICACION', 'CODIGO_ROL', 'APELLIDO_PATERNO', 'APELLIDO_MATERNO', 'NOMBRES', 'NOMBRE_ROL', 'BLOQUEADO', 'AUDITORIA_CREACION', 'AUDITORIA_MODIFICACION'] }],
   },
 
   // ---------- Otros Reportes ----------
