@@ -8,13 +8,13 @@ import type { HallazgoAplicacion } from '@/types/hallazgo';
 
 type Row = HallazgoAplicacion;
 
-type ScenarioDef = {
+export type ScenarioDef = {
   code: string;
   title: string;
   flagKey: string;
 };
 
-const scenarios: ScenarioDef[] = [
+export const scenarios: ScenarioDef[] = [
   { code: 'H1_AD', title: 'Colaboradores Cesados con cuenta activa', flagKey: 'Cesado Activo' },
   { code: 'H2_AD', title: 'Usuarios con acceso posterior al cese del empleado', flagKey: 'Login Post Cese' },
   { code: 'H3_AD', title: 'Usuarios no identificados o sin sustento', flagKey: 'No Identificado' },
@@ -33,11 +33,21 @@ function isPositive(value: unknown): boolean {
   return !['', 'NO', '0', 'FALSE', 'N', 'NULL', '-', 'N/A'].includes(v);
 }
 
-function countByResponsible(rows: Row[], responsible: 'GDH' | 'ACCESOS'): number {
+export function countByResponsible(rows: Row[], responsible: 'GDH' | 'ACCESOS'): number {
   return rows.filter((row) => normalize((row as Record<string, unknown>).Responsable) === responsible).length;
 }
 
-function rowsForScenario(rows: Row[], scenario: ScenarioDef): Row[] {
+/** Junta los comentarios distintos y no vacíos de un escenario. */
+function collectComentarios(rows: Row[]): string {
+  const seen = new Set<string>();
+  for (const row of rows) {
+    const c = String((row as Record<string, unknown>).Comentario ?? '').trim();
+    if (c) seen.add(c);
+  }
+  return Array.from(seen).join(' | ');
+}
+
+export function rowsForScenario(rows: Row[], scenario: ScenarioDef): Row[] {
   return rows.filter((row) => isPositive((row as Record<string, unknown>)[scenario.flagKey]));
 }
 
@@ -164,7 +174,7 @@ export async function exportResumenAdExcel(
       text: scenario.code,
       hyperlink: `#'${scenario.code}'!A1`,
     };
-    summary.getCell(`F${rowIndex}`).value = '';
+    summary.getCell(`F${rowIndex}`).value = collectComentarios(scenarioRows);
 
     ['A', 'B', 'C', 'D', 'E', 'F'].forEach((col) => styleDataCell(summary.getCell(`${col}${rowIndex}`)));
 

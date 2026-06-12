@@ -19,7 +19,6 @@ export const columns: ColumnDef[] = [
   { key: 'Aplicación', header: 'Aplicación', group: 'C1', widthPx: 180, width: 22 },
   { key: 'Usuario', header: 'Usuario', group: 'C1', widthPx: 150, width: 18 },
   { key: 'Estado', header: 'Estado', group: 'C1', widthPx: 120, width: 14 },
-  { key: 'Estado Entra ID', header: 'Estado Entra ID', group: 'C1', widthPx: 120, width: 14 },
   { key: 'Fecha Creación', header: 'Fecha Creación', group: 'C1', widthPx: 150, width: 16, isDate: true },
   { key: 'Fecha Ultimo Login', header: 'Fecha Ultimo Login', group: 'C1', widthPx: 150, width: 16, isDate: true },
 
@@ -31,6 +30,11 @@ export const columns: ColumnDef[] = [
 
   // --- C1 ---
   { key: 'Tipo Colaborador', header: 'Tipo Colaborador', group: 'C1', widthPx: 160, width: 18 },
+  
+  // ---- C7 ---
+  { key: 'Estado Entra ID', header: 'Estado Entra ID', group: 'C7', widthPx: 120, width: 14 },
+  { key: 'Fecha Creacion Entra ID', header: 'Fecha Creacion Entra ID', group: 'C7', widthPx: 120, width: 14, isDate: true},
+  { key: 'Fecha Login Entra ID', header: 'Fecha Login Entra ID', group: 'C7', widthPx: 120, width: 14, isDate: true },
 
   // --- C3 ---
   { key: 'Username AD PPS', header: 'Username AD PPS', group: 'C3', widthPx: 180, width: 20 },

@@ -29,7 +29,7 @@ export const palette = {
  * Cada grupo define el relleno (fill) y el color de texto legible sobre ese relleno.
  * Estos hex se usan IDÉNTICOS en la tabla (badge de cabecera) y en el Excel exportado.
  */
-export type ColorGroupId = 'C1' | 'C2' | 'C3' | 'C4' | 'C5' | 'C6';
+export type ColorGroupId = 'C1' | 'C2' | 'C3' | 'C4' | 'C5' | 'C6' | 'C7';
 
 export interface ColorGroup {
   id: ColorGroupId;
@@ -45,4 +45,5 @@ export const colorGroups: Record<ColorGroupId, ColorGroup> = {
   C4: { id: 'C4', label: 'AD VIDA', fill: palette.inverseSurface, text: '#ffffff' },
   C5: { id: 'C5', label: 'GDH', fill: palette.outline, text: '#ffffff' },
   C6: { id: 'C6', label: 'Ticket Cese', fill: palette.error, text: '#ffffff' },
+  C7: { id: 'C7', label: 'Estado Entra ID', fill: palette.primary, text: '#ffffff' },
 };

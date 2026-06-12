@@ -92,6 +92,7 @@ const LABEL_OVERRIDES: Record<string, string> = {
   lastSignInDateTime: 'Último Inicio Sesión',
   lastNonInteractiveSignInDateTime: 'Inicio No Interactivo',
   lastActivityDateTime: 'Última Actividad',
+  createdatetime: 'CREATEDATETIME',
 };
 
 function humanize(key: string): string {
