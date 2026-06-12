@@ -2,12 +2,11 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import type { Resumen, ResumenRow } from './resumen';
 import { matchesH1, matchesH2 } from './resumen';
-import { h1Columns, h2Columns, KEY_ESCENARIO, type ColumnDef } from './columns';
-import { colorGroups, palette } from './theme';
-import { writeCell } from './excel-format';
+import { h1Columns, h2Columns, KEY_ESCENARIO, type ColumnDef } from '../columns';
+import { colorGroups, palette } from '@/lib/theme';
+import { writeCell } from '@/lib/excel/cell-format';
+import { argb, styleHeader, thinBorder } from '@/lib/excel/style';
 import type { HallazgoAplicacion } from '@/types/hallazgo';
-
-const argb = (hex: string) => 'FF' + hex.replace('#', '').toUpperCase();
 
 const SHEET_H1 = 'H1_APLICACIONES';
 const SHEET_H2 = 'H2_APLICACIONES';
@@ -19,18 +18,6 @@ const FILL = {
   comentario: palette.outline,
   total: '#eaedff',
 };
-
-function thinBorder(hex: string): Partial<ExcelJS.Borders> {
-  const b = { style: 'thin' as const, color: { argb: argb(hex) } };
-  return { top: b, bottom: b, left: b, right: b };
-}
-
-function styleHeader(cell: ExcelJS.Cell, fillHex: string, textHex = '#ffffff') {
-  cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: argb(fillHex) } };
-  cell.font = { color: { argb: argb(textHex) }, bold: true, size: 11 };
-  cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-  cell.border = thinBorder('#ffffff');
-}
 
 /** Hoja de DETALLE con el set de columnas indicado (H1 o H2) y fechas reales. */
 function writeDetailSheet(ws: ExcelJS.Worksheet, rows: HallazgoAplicacion[], cols: ColumnDef[]) {
@@ -56,7 +43,7 @@ function writeDetailSheet(ws: ExcelJS.Worksheet, rows: HallazgoAplicacion[], col
   ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: cols.length } };
 }
 
-/** Hoja "Escenarios" (resumen con enlaces a H1/H2). Sin cambios. */
+/** Hoja "Escenarios" (resumen con enlaces a H1/H2). */
 function writeEscenariosSheet(ws: ExcelJS.Worksheet, resumen: Resumen) {
   ws.views = [{ state: 'frozen', ySplit: 6, xSplit: 2 }];
   ws.getColumn(2).width = 24;

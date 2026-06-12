@@ -9,8 +9,9 @@ import {
   ChevronsRight,
 } from 'lucide-react';
 import clsx from 'clsx';
-import type { DatosRow, ViewColumn } from '@/lib/datos';
-import { formatCell } from '@/lib/datos';
+import type { DatosRow, ViewColumn } from '../datos';
+import { formatCell } from '../datos';
+import { filterRows } from '@/lib/text-filter';
 
 const nf = new Intl.NumberFormat('es-PE');
 const PAGE_SIZES = [25, 50, 100, 200];
@@ -26,17 +27,11 @@ export function PaginatedTable({ rows, columns }: PaginatedTableProps) {
   const [page, setPage] = useState(1);
   const deferredQuery = useDeferredValue(query);
 
-  const filtered = useMemo(() => {
-    const q = deferredQuery.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((row) => {
-      for (let i = 0; i < columns.length; i++) {
-        const v = row[columns[i].key];
-        if (v != null && String(v).toLowerCase().includes(q)) return true;
-      }
-      return false;
-    });
-  }, [rows, columns, deferredQuery]);
+  const keys = useMemo(() => columns.map((c) => c.key), [columns]);
+  const filtered = useMemo(
+    () => filterRows(rows, keys, deferredQuery),
+    [rows, keys, deferredQuery],
+  );
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
 

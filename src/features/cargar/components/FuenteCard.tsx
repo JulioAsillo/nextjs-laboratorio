@@ -7,14 +7,14 @@ import {
   Database, AlertTriangle, Layers, Trash2,
 } from 'lucide-react';
 import clsx from 'clsx';
-import type { Fuente, UploadSlot } from '@/config/fuentes';
-import { FORMATOS } from '@/config/fuentes';
-import { readHeaders } from '@/lib/read-headers';
-import { isAllowedFormat, validateColumns, type ColumnValidation } from '@/lib/validate-fuente';
-import { uploadFuente } from '@/lib/upload-fuente';
-import { mergeFilesToXlsx } from '@/lib/merge-fuente';
-import { markUploaded, isSlotUploaded, clearFuente } from '@/lib/upload-status';
-import { deleteFuente } from '@/lib/delete-fuente';
+import type { Fuente, UploadSlot } from '../fuentes';
+import { FORMATOS } from '../fuentes';
+import { readHeaders } from '../read-headers';
+import { isAllowedFormat, validateColumns, type ColumnValidation } from '../validate-fuente';
+import { uploadFuente } from '../upload-fuente';
+import { mergeFilesToXlsx } from '../merge-fuente';
+import { markUploaded, isSlotUploaded, clearFuente } from '../upload-status';
+import { deleteFuente } from '../delete-fuente';
 import { Button } from '@/components/ui/Button';
 
 const nf = new Intl.NumberFormat('es-PE');

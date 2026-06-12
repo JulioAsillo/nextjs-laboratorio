@@ -1,4 +1,5 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+import { getJson } from '@/lib/http';
+
 const APPS_PATH = process.env.NEXT_PUBLIC_APPS_PATH ?? '/datos/apps';
 
 export type DatosRow = Record<string, unknown>;
@@ -31,11 +32,7 @@ function pickFirstArray(data: unknown): DatosRow[] {
 
 /** GET /datos/apps/{appsKey} -> { fecha_corte, data: { <clave>: [...] } } */
 export async function fetchDatosApp(appsKey: string): Promise<DatosResult> {
-  const url = `${BASE_URL}${APPS_PATH}/${appsKey}`;
-  const res = await fetch(url, { headers: { Accept: 'application/json' } });
-  if (!res.ok) throw new Error(`HTTP ${res.status} al consultar ${url}`);
-
-  const payload: unknown = await res.json();
+  const payload = await getJson<unknown>(`${APPS_PATH}/${appsKey}`);
   const obj = (payload ?? {}) as Record<string, unknown>;
   const data = 'data' in obj ? obj.data : payload;
   const fechaCorte = typeof obj.fecha_corte === 'string' ? obj.fecha_corte : null;

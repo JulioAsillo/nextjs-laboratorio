@@ -1,3 +1,1 @@
-'use client';
-
-export { default } from './cargar-informacion-page';
+export { default } from '@/features/cargar/CargarInformacionPage';

@@ -1,4 +1,4 @@
-import { FORMATOS } from '@/config/fuentes';
+import { FORMATOS } from './fuentes';
 
 export interface ColumnValidation {
   ok: boolean;

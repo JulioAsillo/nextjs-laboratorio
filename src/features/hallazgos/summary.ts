@@ -1,5 +1,5 @@
 import type { HallazgoAplicacion } from '@/types/hallazgo';
-import { palette } from './theme';
+import { palette } from '@/lib/theme';
 import { KEY_ESCENARIO, KEY_APLICACION } from './columns';
 
 export interface EscenarioStat {

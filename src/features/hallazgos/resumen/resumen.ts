@@ -1,5 +1,5 @@
 import type { HallazgoAplicacion } from '@/types/hallazgo';
-import { KEY_APLICACION, KEY_ESCENARIO, KEY_RESPONSABLE } from './columns';
+import { KEY_APLICACION, KEY_ESCENARIO, KEY_RESPONSABLE } from '../columns';
 
 export interface ResumenRow {
   aplicacion: string;
@@ -16,7 +16,6 @@ export interface Resumen {
   total: ResumenRow;
 }
 
-/** H1: el escenario CONTIENE "cesado activo" (cubre "Cesado Activo" y "Cesado Activo Ticket"). */
 /** H1: escenario "Cesado Activo" EXCLUYENDO "Cesado Activo Ticket". */
 export const matchesH1 = (esc: string) => {
   const l = esc.toLowerCase();

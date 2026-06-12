@@ -3,8 +3,9 @@
 import { useEffect, useMemo } from 'react';
 import useSWR from 'swr';
 import { X, CalendarClock } from 'lucide-react';
-import { fetchDatosApp, deriveColumns, type DatosResult } from '@/lib/datos';
-import { PaginatedTable } from '@/components/table/PaginatedTable';
+import { fetchDatosApp, deriveColumns, type DatosResult } from '../datos';
+import { datosKey } from '../keys';
+import { PaginatedTable } from './PaginatedTable';
 
 interface DatosModalProps {
   appsKey: string;
@@ -14,7 +15,7 @@ interface DatosModalProps {
 
 export function DatosModal({ appsKey, title, onClose }: DatosModalProps) {
   // Lee de la caché ya sembrada por "Cargar Todos" / "Cargar". No revalida solo.
-  const { data } = useSWR<DatosResult>(['datos', appsKey], () => fetchDatosApp(appsKey), {
+  const { data } = useSWR<DatosResult>(datosKey(appsKey), () => fetchDatosApp(appsKey), {
     revalidateOnMount: false,
     revalidateOnFocus: false,
     revalidateOnReconnect: false,

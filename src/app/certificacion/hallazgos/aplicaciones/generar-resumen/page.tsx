@@ -12,9 +12,9 @@ import {
 } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/Button';
-import { parseDetailExcel } from '@/lib/import-excel';
-import { buildResumen, type Resumen } from '@/lib/resumen';
-import { exportResumenExcel } from '@/lib/export-resumen-excel';
+import { parseDetailExcel } from '@/features/hallazgos/resumen/import-excel';
+import { buildResumen, type Resumen } from '@/features/hallazgos/resumen/resumen';
+import { exportResumenExcel } from '@/features/hallazgos/resumen/export-resumen-excel';
 import type { HallazgoAplicacion } from '@/types/hallazgo';
 
 const nf = new Intl.NumberFormat('es-PE');

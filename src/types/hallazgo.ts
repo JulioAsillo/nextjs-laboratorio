@@ -1,7 +1,8 @@
 /**
  * Una fila de Hallazgos - Aplicaciones.
  * Como las claves del backend llevan espacios/acentos ("Tipo Aplicación", "DNI AD PPS", etc.),
- * se modela como diccionario. Las claves válidas están centralizadas en `columns.ts`.
+ * se modela como diccionario. Las claves válidas están centralizadas en
+ * features/hallazgos/columns.ts.
  */
 export type HallazgoAplicacion = Record<string, string | null>;
 

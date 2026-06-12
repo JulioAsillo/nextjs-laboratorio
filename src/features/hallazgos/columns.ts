@@ -1,4 +1,4 @@
-import type { ColorGroupId } from './theme';
+import type { ColorGroupId } from '@/lib/theme';
 
 export interface ColumnDef {
   key: string;
@@ -19,6 +19,7 @@ export const columns: ColumnDef[] = [
   { key: 'Aplicación', header: 'Aplicación', group: 'C1', widthPx: 180, width: 22 },
   { key: 'Usuario', header: 'Usuario', group: 'C1', widthPx: 150, width: 18 },
   { key: 'Estado', header: 'Estado', group: 'C1', widthPx: 120, width: 14 },
+  { key: 'Estado Entra ID', header: 'Estado Entra ID', group: 'C1', widthPx: 120, width: 14 },
   { key: 'Fecha Creación', header: 'Fecha Creación', group: 'C1', widthPx: 150, width: 16, isDate: true },
   { key: 'Fecha Ultimo Login', header: 'Fecha Ultimo Login', group: 'C1', widthPx: 150, width: 16, isDate: true },
 

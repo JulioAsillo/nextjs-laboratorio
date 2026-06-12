@@ -1,6 +1,6 @@
 import type { HallazgoAplicacion } from '@/types/hallazgo';
+import { getJson } from '@/lib/http';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 const ENDPOINT_APPS = process.env.NEXT_PUBLIC_HALLAZGOS_ENDPOINT ?? '/hallazgos/apps';
 const ENDPOINT_AD = process.env.NEXT_PUBLIC_HALLAZGOS_AD_ENDPOINT ?? '/hallazgos/ad';
 
@@ -24,17 +24,10 @@ function pickCollection(raw: unknown, keys: string[]): Row[] {
   return [];
 }
 
-async function fetchJson(url: string): Promise<unknown> {
-  const res = await fetch(url, { headers: { Accept: 'application/json' } });
-  if (!res.ok) throw new Error(`HTTP ${res.status} al consultar ${url}`);
-  return res.json();
-}
-
 /** Hallazgos de Aplicaciones: /hallazgos/apps -> data.reporte_apps */
 export async function fetchHallazgos(): Promise<Row[]> {
-  const url = `${BASE_URL}${ENDPOINT_APPS}`;
   try {
-    return pickCollection(await fetchJson(url), ['reporte_apps']);
+    return pickCollection(await getJson(ENDPOINT_APPS), ['reporte_apps']);
   } catch (err) {
     if (process.env.NODE_ENV !== 'production') {
       const mock = await fetch('/mock-hallazgos.json').then((r) => r.json());
@@ -46,6 +39,5 @@ export async function fetchHallazgos(): Promise<Row[]> {
 
 /** Hallazgos de Active Directory: /hallazgos/ad -> data.reporte_ad */
 export async function fetchHallazgosAd(): Promise<Row[]> {
-  const url = `${BASE_URL}${ENDPOINT_AD}`;
-  return pickCollection(await fetchJson(url), ['reporte_ad']);
+  return pickCollection(await getJson(ENDPOINT_AD), ['reporte_ad']);
 }

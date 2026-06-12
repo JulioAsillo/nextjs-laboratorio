@@ -5,14 +5,15 @@ import { useSWRConfig } from 'swr';
 import clsx from 'clsx';
 import { Loader2, DownloadCloud, CheckCircle2, Trash2, X, AlertTriangle } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
-import { FuenteCard, type LoadStatus } from '@/components/cargar/FuenteCard';
-import { FuentesCargadasPanel } from '@/components/cargar/FuentesCargadasPanel';
-import { DatosModal } from '@/components/cargar/DatosModal';
 import { Button } from '@/components/ui/Button';
-import { fuentes } from '@/config/fuentes';
-import { fetchDatosApp, type DatosResult } from '@/lib/datos';
-import { purgeAll } from '@/lib/delete-fuente';
-import { clearAllUploads as lsClearAll } from '@/lib/upload-status';
+import { FuenteCard, type LoadStatus } from './components/FuenteCard';
+import { FuentesCargadasPanel } from './components/FuentesCargadasPanel';
+import { DatosModal } from './components/DatosModal';
+import { fuentes } from './fuentes';
+import { fetchDatosApp, type DatosResult } from './datos';
+import { datosKey } from './keys';
+import { purgeAll } from './delete-fuente';
+import { clearAllUploads as lsClearAll } from './upload-status';
 
 const GROUPS = ['Aplicaciones', 'Otros Reportes'] as const;
 
@@ -49,7 +50,7 @@ export default function CargarInformacionPage() {
     setLoadingKey(appsKey);
     setStatus((prev) => ({ ...prev, [appsKey]: 'loading' }));
     try {
-      const res = (await mutate(['datos', appsKey], fetchDatosApp(appsKey), { revalidate: false })) as DatosResult | undefined;
+      const res = (await mutate(datosKey(appsKey), fetchDatosApp(appsKey), { revalidate: false })) as DatosResult | undefined;
       const count = res?.rows.length ?? 0;
       if (count > 0) {
         setLoaded((prev) => ({ ...prev, [appsKey]: count }));

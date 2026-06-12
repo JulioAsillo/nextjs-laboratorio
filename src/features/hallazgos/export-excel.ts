@@ -1,13 +1,10 @@
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { columns } from './columns';
-import { colorGroups } from './theme';
-import { writeCell } from './excel-format';
+import { colorGroups } from '@/lib/theme';
+import { writeCell } from '@/lib/excel/cell-format';
+import { styleHeader } from '@/lib/excel/style';
 import type { HallazgoAplicacion } from '@/types/hallazgo';
-
-function toArgb(hex: string): string {
-  return 'FF' + hex.replace('#', '').toUpperCase();
-}
 
 export async function exportToExcel(
   rows: HallazgoAplicacion[],
@@ -25,18 +22,10 @@ export async function exportToExcel(
 
   const headerRow = sheet.getRow(1);
   columns.forEach((col, idx) => {
-    const cell = headerRow.getCell(idx + 1);
     const group = colorGroups[col.group];
+    const cell = headerRow.getCell(idx + 1);
     cell.value = col.header;
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: toArgb(group.fill) } };
-    cell.font = { color: { argb: toArgb(group.text) }, bold: true, size: 11 };
-    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-    cell.border = {
-      top: { style: 'thin', color: { argb: 'FFFFFFFF' } },
-      bottom: { style: 'thin', color: { argb: 'FFFFFFFF' } },
-      left: { style: 'thin', color: { argb: 'FFFFFFFF' } },
-      right: { style: 'thin', color: { argb: 'FFFFFFFF' } },
-    };
+    styleHeader(cell, group.fill, group.text);
   });
   headerRow.height = 30;
 

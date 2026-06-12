@@ -1,5 +1,5 @@
 import ExcelJS from 'exceljs';
-import { columns } from './columns';
+import { columns } from '../columns';
 import type { HallazgoAplicacion } from '@/types/hallazgo';
 
 /** Convierte el valor de una celda exceljs a string plano. */
