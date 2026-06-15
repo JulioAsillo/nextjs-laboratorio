@@ -144,7 +144,7 @@ export const fuentes: Fuente[] = [
   },
   {
     id: 'entra-id', label: 'Entra ID', group: 'Otros Reportes', appsKey: 'entraid',
-    slots: [{ fileName: 'entra_id', columns: ['ID', 'SIGNINACTIVITY', 'USERPRINCIPALNAME', 'MAIL', 'ACCOUNTENABLED', 'CREATEDDATETIME'] }],
+    slots: [{ fileName: 'entra_id', columns: ['ID', 'SIGNINACTIVITY', 'USERPRINCIPALNAME', 'MAIL', 'ACCOUNTENABLED', 'CREATEDDATETIME', 'FAXNUMBER'] }],
   },
   {
     id: 'tickets-ceses', label: 'Tickets Ceses', group: 'Otros Reportes', appsKey: 'tickets',
