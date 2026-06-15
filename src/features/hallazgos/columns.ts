@@ -35,7 +35,7 @@ export const columns: ColumnDef[] = [
   { key: 'Estado Entra ID', header: 'Estado Entra ID', group: 'C7', widthPx: 120, width: 14 },
   { key: 'Fecha Creacion Entra ID', header: 'Fecha Creacion Entra ID', group: 'C7', widthPx: 120, width: 14, isDate: true},
   { key: 'Fecha Login Entra ID', header: 'Fecha Login Entra ID', group: 'C7', widthPx: 120, width: 14, isDate: true },
-  { key: 'Fax Number Entra ID', header: 'Fax Number Entra ID', group: 'C7', widthPx: 120, width: 14, isDate: true },
+  { key: 'FaxNumber Entra ID', header: 'FaxNumber Entra ID', group: 'C7', widthPx: 120, width: 14, isDate: true },
 
   // --- C3 ---
   { key: 'Username AD PPS', header: 'Username AD PPS', group: 'C3', widthPx: 180, width: 20 },
