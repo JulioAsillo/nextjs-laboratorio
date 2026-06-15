@@ -5,24 +5,24 @@
 @tailwind utilities;
 
 :root {
-  --surface: #faf8ff;
-  --surface-container-lowest: #ffffff;
-  --surface-container-low: #f2f3ff;
-  --surface-container: #eaedff;
-  --surface-container-high: #e2e7ff;
-  --on-surface: #131b2e;
-  --on-surface-variant: #3e484f;
-  --inverse-surface: #283044;
-  --inverse-on-surface: #eef0ff;
-  --outline: #6e7880;
-  --outline-variant: #bdc8d0;
-  --primary: #006386;
-  --on-primary: #ffffff;
-  --primary-container: #007da8;
-  --secondary: #006d38;
-  --tertiary: #964400;
-  --error: #ba1a1a;
-  --primary-fixed-dim: #78d1ff;
+  --surface: 250 248 255;
+  --surface-container-lowest: 255 255 255;
+  --surface-container-low: 242 243 255;
+  --surface-container: 234 237 255;
+  --surface-container-high: 226 231 255;
+  --on-surface: 19 27 46;
+  --on-surface-variant: 62 72 79;
+  --inverse-surface: 40 48 68;
+  --inverse-on-surface: 238 240 255;
+  --outline: 110 120 128;
+  --outline-variant: 189 200 208;
+  --primary: 0 99 134;
+  --on-primary: 255 255 255;
+  --primary-container: 0 125 168;
+  --secondary: 0 109 56;
+  --tertiary: 150 68 0;
+  --error: 186 26 26;
+  --primary-fixed-dim: 120 209 255;
 }
 
 html,
@@ -31,8 +31,8 @@ body {
 }
 
 body {
-  background-color: var(--surface);
-  color: var(--on-surface);
+  background-color: rgb(var(--surface));
+  color: rgb(var(--on-surface));
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -43,7 +43,7 @@ body {
   width: 10px;
 }
 .thin-scroll::-webkit-scrollbar-thumb {
-  background: var(--outline-variant);
+  background: rgb(var(--outline-variant));
   border-radius: 9999px;
 }
 .thin-scroll::-webkit-scrollbar-track {

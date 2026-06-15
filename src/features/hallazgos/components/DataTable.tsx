@@ -73,8 +73,8 @@ export function DataTable({ rows, columns }: DataTableProps) {
                   transform: `translateY(${vItem.start}px)`,
                   display: 'grid',
                   gridTemplateColumns: gridTemplate,
-                  backgroundColor: zebra ? 'var(--surface-container-low)' : 'transparent',
-                  borderBottom: '1px solid var(--outline-variant)',
+                  backgroundColor: zebra ? 'rgb(var(--surface-container-low))' : 'transparent',
+                  borderBottom: '1px solid rgb(var(--outline-variant))',
                 }}
               >
                 {columns.map((col) => {
