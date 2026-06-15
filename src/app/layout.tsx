@@ -1,12 +1,17 @@
 // src/app/layout.tsx
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+/**
+ * Inter auto-hospedada (sin red en build ni runtime).
+ * Fuente variable: un solo .woff2 cubre los pesos 100–900.
+ * Subset latín (incluye acentos y ñ del español).
+ */
+const inter = localFont({
+  src: './fonts/Inter-variable.woff2',
   variable: '--font-inter',
+  weight: '100 900',
   display: 'swap',
 });
 
