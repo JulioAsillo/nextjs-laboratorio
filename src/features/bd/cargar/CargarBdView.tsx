@@ -13,6 +13,11 @@ import { bdFuentes, BD_GROUPS } from './fuentes';
 import { fetchDatosBd, bdDatosKey } from './datos';
 import { purgeAllBd, clearAllUploadsBd } from './upload';
 import type { DatosResult } from '@/features/cargar/datos';
+import { useFocusCard } from '@/lib/use-focus-card';
+import { useCargarCache } from '@/lib/use-cargar-cache';
+import { idbDel } from '@/lib/idb-cache';
+
+const CACHE_KEY = 'cargar:bd';
 
 interface ModalState { kind: 'dbs' | 'shared'; appsKey: string; title: string; }
 interface PurgeState {
@@ -23,6 +28,7 @@ interface PurgeState {
 
 export default function CargarBdView() {
   const { mutate } = useSWRConfig();
+  useFocusCard();
 
   const [loaded,     setLoaded]     = useState<Record<string, number>>({});
   const [status,     setStatus]     = useState<Record<string, LoadStatus>>({});
@@ -31,6 +37,8 @@ export default function CargarBdView() {
   const [modal,      setModal]      = useState<ModalState | null>(null);
   const [resetTick,  setResetTick]  = useState(0);
   const [purge,      setPurge]      = useState<PurgeState>({ confirming: false, running: false, result: null });
+
+  useCargarCache<LoadStatus>(CACHE_KEY, loaded, status, setLoaded, setStatus);
 
   const appsKeys = useMemo(
     () => bdFuentes.map((f) => f.appsKey).filter((k): k is string => !!k),
@@ -91,6 +99,7 @@ export default function CargarBdView() {
     try {
       const res = await purgeAllBd(bdFuentes);
       clearAllUploadsBd();
+      await idbDel(CACHE_KEY);
       setLoaded({});
       setStatus({});
       setResetTick((t) => t + 1);
@@ -171,8 +180,8 @@ export default function CargarBdView() {
                 <h2 className="mb-3 text-label-caps uppercase tracking-wider text-on-surface-variant">{group.label} · {items.length}</h2>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   {items.map((f) => (
+                    <div key={f.id} id={`fuente-${f.id}`} className="scroll-mt-28 rounded-lg transition-shadow">
                     <FuenteCardBd
-                      key={f.id}
                       fuente={f}
                       loadedCount={f.appsKey ? loaded[f.appsKey] : undefined}
                       loadingData={f.appsKey ? loadingKey === f.appsKey : false}
@@ -182,6 +191,7 @@ export default function CargarBdView() {
                       onDeleted={f.appsKey ? () => clearOne(f.appsKey!) : undefined}
                       onView={f.appsKey && (loaded[f.appsKey] ?? 0) > 0 ? () => setModal({ kind: f.kind, appsKey: f.appsKey!, title: f.label }) : undefined}
                     />
+                    </div>
                   ))}
                 </div>
               </section>

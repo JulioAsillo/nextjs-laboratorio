@@ -1,13 +1,14 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSWRConfig } from 'swr';
 import useSWR from 'swr';
-import { Download, Loader2, Search, Play, Database, Server, CalendarClock } from 'lucide-react';
+import { Download, Loader2, Search, Play, Database, Server, CalendarClock, DatabaseZap } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/Button';
 import { DataTable } from '@/features/hallazgos/components/DataTable';
 import { useTextFilter } from '@/lib/text-filter';
+import { useHallazgoCache } from '@/lib/use-hallazgo-cache';
 import type { ColumnDef } from '@/features/hallazgos/columns';
 import type { HallazgoAplicacion } from '@/types/hallazgo';
 import { fetchBdHallazgoDbs, type BdHallazgoDbs } from './api';
@@ -18,6 +19,7 @@ import { computeBdSummary } from './summary';
 import { BdSummaryCards } from './components/BdSummaryCards';
 
 const nf = new Intl.NumberFormat('es-PE');
+const dtf = new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 const ENDPOINT_HINT = '/hallazgos/dbs';
 
 type TabId = 'vida' | 'generales';
@@ -114,13 +116,34 @@ export function HallazgosDbsView() {
   const vida = useMemo(() => data?.vida ?? [], [data]);
   const generales = useMemo(() => data?.generales ?? [], [data]);
 
+  // Persistencia en IndexedDB (sobrevive al F5).
+  const cache = useHallazgoCache<BdHallazgoDbs>('hallazgos:bd-dbs');
+  const hydratedRef = useRef(false);
+
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    hydratedRef.current = true;
+    if (data !== undefined) return;
+    (async () => {
+      const env = await cache.hydrate();
+      if (!env) return;
+      await globalMutate(BD_SWR_KEYS.hallazgoDbs, env.data, { revalidate: false });
+      cache.setMeta({ savedAt: env.savedAt, fechaRef: env.fechaRef });
+      if (env.fechaRef) setFechaCorte(env.fechaRef);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function generar() {
     if (generating) return;
     setGenerating(true);
     try {
-      await globalMutate(BD_SWR_KEYS.hallazgoDbs, fetchBdHallazgoDbs(fechaCorte || undefined), {
-        revalidate: false,
-      });
+      const fresh = (await globalMutate(
+        BD_SWR_KEYS.hallazgoDbs,
+        fetchBdHallazgoDbs(fechaCorte || undefined),
+        { revalidate: false },
+      )) as BdHallazgoDbs | undefined;
+      if (fresh) await cache.remember(fresh, fechaCorte || undefined);
     } finally {
       setGenerating(false);
     }
@@ -203,6 +226,16 @@ export function HallazgosDbsView() {
 
       {loaded && (
         <div className="flex flex-col gap-4">
+          {cache.meta && (
+            <div className="flex items-center gap-2 rounded-md border border-outline-variant bg-surface-container-low px-3 py-2 text-body-md text-on-surface-variant">
+              <DatabaseZap size={15} className="shrink-0 text-primary" />
+              <span>
+                Datos en caché del {dtf.format(cache.meta.savedAt)}
+                {cache.meta.fechaRef ? ` · fecha ref ${cache.meta.fechaRef}` : ''}. Pulsa{' '}
+                <strong className="font-semibold text-on-surface">Generar</strong> para refrescar.
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-1 border-b border-outline-variant">
             {tabs.map((t) => {
               const active = tab === t.id;

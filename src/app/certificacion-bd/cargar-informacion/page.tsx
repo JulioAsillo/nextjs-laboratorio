@@ -1,5 +1,10 @@
+import { Suspense } from 'react';
 import CargarBdView from '@/features/bd/cargar/CargarBdView';
 
 export default function CargarInformacionBdPage() {
-  return <CargarBdView />;
+  return (
+    <Suspense fallback={null}>
+      <CargarBdView />
+    </Suspense>
+  );
 }

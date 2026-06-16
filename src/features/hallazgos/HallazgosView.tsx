@@ -1,16 +1,18 @@
 'use client';
 
-import { type ReactNode, useMemo, useState } from 'react';
-import { Download, RefreshCw, Loader2, Search, Play, CalendarClock } from 'lucide-react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { Download, RefreshCw, Loader2, Search, Play, CalendarClock, DatabaseZap } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/Button';
 import { useTextFilter } from '@/lib/text-filter';
+import { useHallazgoCache } from '@/lib/use-hallazgo-cache';
 import { DataTable } from './components/DataTable';
 import { useHallazgos } from './use-hallazgos';
 import type { ColumnDef } from './columns';
 import type { HallazgoAplicacion } from '@/types/hallazgo';
 
 const nf = new Intl.NumberFormat('es-PE');
+const dtf = new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
 interface HallazgosViewProps<S> {
   title: string;
@@ -92,20 +94,44 @@ export function HallazgosView<S>({
   const [generating, setGenerating] = useState(false);
   const busy = generating || isValidating;
 
+  // Persistencia en IndexedDB (sobrevive al F5). Clave por dataset.
+  const cache = useHallazgoCache<HallazgoAplicacion[]>(`hallazgos:${swrKey}`);
+  const hydratedRef = useRef(false);
+
+  // Al montar: si no hay datos en memoria, rehidrata desde la caché y muestra
+  // el banner. La consulta al backend sigue siendo manual (Actualizar).
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    hydratedRef.current = true;
+    if (data !== undefined) return;
+    (async () => {
+      const env = await cache.hydrate();
+      if (!env) return;
+      await mutate(env.data, { revalidate: false });
+      cache.setMeta({ savedAt: env.savedAt, fechaRef: env.fechaRef });
+      if (env.fechaRef) setFechaRef(env.fechaRef);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   /**
-   * Dispara la consulta al backend. Con `withFechaRef`, inyecta el resultado
-   * vía `mutate(promise)` para poder pasar la fecha; si no, revalida el fetcher
-   * enlazado por SWR (comportamiento original de Aplicaciones).
+   * Dispara la consulta al backend y persiste el resultado. Con `withFechaRef`,
+   * inyecta el resultado vía `mutate(promise)` para poder pasar la fecha; si no,
+   * revalida el fetcher enlazado por SWR (comportamiento original de Aplicaciones).
    */
   async function trigger() {
     if (busy) return;
     if (!withFechaRef) {
-      await mutate();
+      const fresh = (await mutate()) as HallazgoAplicacion[] | undefined;
+      if (fresh) await cache.remember(fresh);
       return;
     }
     setGenerating(true);
     try {
-      await mutate(fetcher(fechaRef || undefined), { revalidate: false });
+      const fresh = (await mutate(fetcher(fechaRef || undefined), { revalidate: false })) as
+        | HallazgoAplicacion[]
+        | undefined;
+      if (fresh) await cache.remember(fresh, fechaRef || undefined);
     } finally {
       setGenerating(false);
     }
@@ -187,6 +213,16 @@ export function HallazgosView<S>({
 
       {loaded && (
         <div className="flex flex-col gap-4">
+          {cache.meta && (
+            <div className="flex items-center gap-2 rounded-md border border-outline-variant bg-surface-container-low px-3 py-2 text-body-md text-on-surface-variant">
+              <DatabaseZap size={15} className="shrink-0 text-primary" />
+              <span>
+                Datos en caché del {dtf.format(cache.meta.savedAt)}
+                {cache.meta.fechaRef ? ` · fecha ref ${cache.meta.fechaRef}` : ''}. Pulsa{' '}
+                <strong className="font-semibold text-on-surface">Actualizar</strong> para refrescar.
+              </span>
+            </div>
+          )}
           {renderSummary(summary)}
 
           <div className="flex flex-wrap items-center justify-between gap-3">

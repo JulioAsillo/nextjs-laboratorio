@@ -14,6 +14,11 @@ import { fetchDatosApp, type DatosResult } from './datos';
 import { datosKey } from './keys';
 import { purgeAll } from './delete-fuente';
 import { clearAllUploads as lsClearAll } from './upload-status';
+import { useFocusCard } from '@/lib/use-focus-card';
+import { useCargarCache } from '@/lib/use-cargar-cache';
+import { idbDel } from '@/lib/idb-cache';
+
+const CACHE_KEY = 'cargar:usuarios';
 
 const GROUPS = ['Aplicaciones', 'Otros Reportes'] as const;
 
@@ -26,6 +31,7 @@ interface PurgeState {
 
 export default function CargarInformacionPage() {
   const { mutate } = useSWRConfig();
+  useFocusCard();
 
   const [loaded,     setLoaded]     = useState<Record<string, number>>({});
   const [status,     setStatus]     = useState<Record<string, LoadStatus>>({});
@@ -34,6 +40,8 @@ export default function CargarInformacionPage() {
   const [modal,      setModal]      = useState<ModalState | null>(null);
   const [resetTick,  setResetTick]  = useState(0);
   const [purge,      setPurge]      = useState<PurgeState>({ confirming: false, running: false, result: null });
+
+  useCargarCache<LoadStatus>(CACHE_KEY, loaded, status, setLoaded, setStatus);
 
   const appsKeys = useMemo(
     () => fuentes.map((f) => f.appsKey).filter((k): k is string => !!k),
@@ -87,6 +95,7 @@ export default function CargarInformacionPage() {
     try {
       const res = await purgeAll();
       lsClearAll();
+      await idbDel(CACHE_KEY);
       setLoaded({});
       setStatus({});
       setResetTick((t) => t + 1);
@@ -167,8 +176,8 @@ export default function CargarInformacionPage() {
                 <h2 className="mb-3 text-label-caps uppercase tracking-wider text-on-surface-variant">{group} · {items.length}</h2>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   {items.map((f) => (
+                    <div key={f.id} id={`fuente-${f.id}`} className="scroll-mt-28 rounded-lg transition-shadow">
                     <FuenteCard
-                      key={f.id}
                       fuente={f}
                       loadedCount={f.appsKey ? loaded[f.appsKey] : undefined}
                       loadingData={f.appsKey ? loadingKey === f.appsKey : false}
@@ -178,6 +187,7 @@ export default function CargarInformacionPage() {
                       onDeleted={f.appsKey ? () => clearOne(f.appsKey!) : undefined}
                       onView={f.appsKey && (loaded[f.appsKey] ?? 0) > 0 ? () => setModal({ appsKey: f.appsKey!, title: f.label }) : undefined}
                     />
+                    </div>
                   ))}
                 </div>
               </section>
