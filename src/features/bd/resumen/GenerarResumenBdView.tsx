@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/Button';
 import { parseDetailExcelBd } from './import-excel-bd';
 import { buildResumenBd, type ResumenBd, type ResumenMatrix } from './resumen-bd';
 import { exportResumenBdExcel } from './export-resumen-bd';
-import type { HallazgoAplicacion } from '@/types/hallazgo';
+import type { HallazgoAplicacion } from '@/types/hallazgo'
 
 const nf = new Intl.NumberFormat('es-PE');
 
@@ -107,7 +107,8 @@ export function GenerarResumenBdView() {
             <li>
               <span className="font-semibold text-on-surface">2.</span> Llena la columna{' '}
               <span className="font-semibold text-on-surface">Responsable</span> con{' '}
-              <code className="font-mono">GDH</code> o <code className="font-mono">ACCESOS</code> (y{' '}
+              <code className="font-mono">GDH</code>, <code className="font-mono">ACCESOS</code> o{' '}
+              <code className="font-mono">GDH | ACCESOS</code> (y{' '}
               <span className="font-semibold text-on-surface">Comentario</span> si aplica) y guarda.
             </li>
             <li>
@@ -222,7 +223,7 @@ function MatrixTable({ title, matrix }: { title: string; matrix: ResumenMatrix }
                 <th key={s.code} className="px-3 py-2 text-right" title={s.title}>
                   {s.hx}
                   {s.reportable && (
-                    <span className="ml-1 text-label-caps uppercase text-on-surface-variant/70">·G/A</span>
+                    <span className="ml-1 text-label-caps uppercase text-on-surface-variant/70">·G/A/A+G</span>
                   )}
                 </th>
               ))}
@@ -239,7 +240,7 @@ function MatrixTable({ title, matrix }: { title: string; matrix: ResumenMatrix }
                       {c.total}
                       {s.reportable && (
                         <span className="ml-1 text-on-surface-variant/70">
-                          ({c.gdh}/{c.accesos})
+                          ({c.gdh}/{c.accesos}/{c.ambos})
                         </span>
                       )}
                     </td>
@@ -256,7 +257,7 @@ function MatrixTable({ title, matrix }: { title: string; matrix: ResumenMatrix }
                     {t.total}
                     {s.reportable && (
                       <span className="ml-1 text-on-surface-variant/70">
-                        ({t.gdh}/{t.accesos})
+                        ({t.gdh}/{t.accesos}/{t.ambos})
                       </span>
                     )}
                   </td>

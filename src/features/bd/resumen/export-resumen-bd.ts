@@ -56,11 +56,23 @@ function isPositive(value: unknown): boolean {
   return !['', 'NO', '0', 'FALSE', 'N', 'NULL', '-', 'N/A'].includes(v);
 }
 
-export function countByResponsible(rows: Row[], responsible: 'GDH' | 'ACCESOS'): number {
-  return rows.filter((row) => {
-    const r = normalize((row as Record<string, unknown>).Responsable);
-    return responsible === 'ACCESOS' ? r.startsWith('ACCESO') : r === 'GDH';
-  }).length;
+/**
+ * Clasifica el Responsable de una fila de forma EXCLUYENTE:
+ *  - 'AMBOS'   -> contiene GDH y ACCESO(S)  (p.ej. "GDH | ACCESOS")
+ *  - 'GDH'     -> solo GDH
+ *  - 'ACCESOS' -> solo ACCESO(S)
+ *  - 'OTRO'    -> vacío, "-", TECNOLOGIA, etc.
+ */
+export type ResponsableTipo = 'GDH' | 'ACCESOS' | 'AMBOS' | 'OTRO';
+
+export function classifyResponsible(value: unknown): ResponsableTipo {
+  const v = normalize(value);
+  const hasGdh = v.includes('GDH');
+  const hasAcc = v.includes('ACCESO');
+  if (hasGdh && hasAcc) return 'AMBOS';
+  if (hasGdh) return 'GDH';
+  if (hasAcc) return 'ACCESOS';
+  return 'OTRO';
 }
 
 /** Filas de un escenario (flag positiva). */
@@ -88,18 +100,25 @@ export function monitoreoValues(rows: Row[]): string[] {
 
 export interface ResumenCell {
   total: number;
+  /** Solo GDH. */
   gdh: number;
+  /** Solo ACCESOS. */
   accesos: number;
+  /** GDH | ACCESOS (ambos). */
+  ambos: number;
 }
 
 /** Conteo de un escenario para un "monitoreo" concreto. */
 export function cellFor(rows: Row[], scenario: BdScenario, monitoreo: string): ResumenCell {
   const scoped = rowsForScenario(rows, scenario).filter((r) => monitoreoOf(r) === monitoreo);
-  return {
-    total: scoped.length,
-    gdh: countByResponsible(scoped, 'GDH'),
-    accesos: countByResponsible(scoped, 'ACCESOS'),
-  };
+  const cell: ResumenCell = { total: scoped.length, gdh: 0, accesos: 0, ambos: 0 };
+  for (const r of scoped) {
+    const tipo = classifyResponsible((r as Record<string, unknown>).Responsable);
+    if (tipo === 'GDH') cell.gdh += 1;
+    else if (tipo === 'ACCESOS') cell.accesos += 1;
+    else if (tipo === 'AMBOS') cell.ambos += 1;
+  }
+  return cell;
 }
 
 /* ── Estilos Excel ─────────────────────────────────────────────────────── */
@@ -134,7 +153,7 @@ function writeMatrix(
   rows: Row[],
 ): number {
   const monitoreos = monitoreoValues(rows);
-  const subCols = scenarios.map((s) => (s.reportable ? 3 : 1));
+  const subCols = scenarios.map((s) => (s.reportable ? 4 : 1));
   const totalCols = 1 + subCols.reduce((a, b) => a + b, 0);
   const lastCol = totalCols; // col 1 = etiqueta
 
@@ -173,7 +192,7 @@ function writeMatrix(
 
     // Sub-cabeceras.
     const subHeaders = s.reportable
-      ? ['Hallazgos inicial', 'Reportar GDH', 'Reportar Acceso']
+      ? ['Hallazgos inicial', 'Reportar GDH', 'Reportar Acceso', 'GDH | ACCESOS']
       : ['Hallazgos inicial'];
     subHeaders.forEach((h, k) => {
       const c = sheet.getCell(rHead, col + k);
@@ -185,7 +204,7 @@ function writeMatrix(
   });
 
   // Filas de datos.
-  const totals: ResumenCell[] = scenarios.map(() => ({ total: 0, gdh: 0, accesos: 0 }));
+  const totals: ResumenCell[] = scenarios.map(() => ({ total: 0, gdh: 0, accesos: 0, ambos: 0 }));
   monitoreos.forEach((m, ri) => {
     const r = rData0 + ri;
     const label = sheet.getCell(r, 1);
@@ -199,8 +218,11 @@ function writeMatrix(
       totals[i].total += cell.total;
       totals[i].gdh += cell.gdh;
       totals[i].accesos += cell.accesos;
+      totals[i].ambos += cell.ambos;
 
-      const values = s.reportable ? [cell.total, cell.gdh, cell.accesos] : [cell.total];
+      const values = s.reportable
+        ? [cell.total, cell.gdh, cell.accesos, cell.ambos]
+        : [cell.total];
       values.forEach((v, k) => {
         const cc = sheet.getCell(r, c + k);
         cc.value = v;
@@ -218,7 +240,7 @@ function writeMatrix(
   let tc = 2;
   scenarios.forEach((s, i) => {
     const values = s.reportable
-      ? [totals[i].total, totals[i].gdh, totals[i].accesos]
+      ? [totals[i].total, totals[i].gdh, totals[i].accesos, totals[i].ambos]
       : [totals[i].total];
     values.forEach((v, k) => {
       const cc = sheet.getCell(rTotal, tc + k);
@@ -287,7 +309,7 @@ export async function exportResumenBdExcel(
 
   const summary = workbook.addWorksheet('Escenarios', { views: [{ state: 'frozen', ySplit: 0 }] });
   summary.getColumn(1).width = 30;
-  for (let i = 2; i <= 10; i++) summary.getColumn(i).width = 13;
+  for (let i = 2; i <= 14; i++) summary.getColumn(i).width = 13;
 
   let next = writeMatrix(summary, 1, 'Base de Datos SOX GENERALES', GENERALES_SCENARIOS, generales);
   writeMatrix(summary, next + 1, 'Base de Datos SOX VIDA', VIDA_SCENARIOS, vida);

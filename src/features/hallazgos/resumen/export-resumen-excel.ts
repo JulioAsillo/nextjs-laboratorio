@@ -47,49 +47,54 @@ function writeDetailSheet(ws: ExcelJS.Worksheet, rows: HallazgoAplicacion[], col
 function writeEscenariosSheet(ws: ExcelJS.Worksheet, resumen: Resumen) {
   ws.views = [{ state: 'frozen', ySplit: 6, xSplit: 2 }];
   ws.getColumn(2).width = 24;
-  for (let c = 3; c <= 8; c++) ws.getColumn(c).width = 16;
-  ws.getColumn(9).width = 32;
+  for (let c = 3; c <= 10; c++) ws.getColumn(c).width = 16;
+  ws.getColumn(11).width = 32;
 
-  ws.mergeCells('C3:H3');
+  ws.mergeCells('C3:J3');
   ws.getCell('C3').value = 'APLICACIONES SOX VIDA';
   styleHeader(ws.getCell('C3'), FILL.title);
   ws.getRow(3).height = 24;
 
-  ws.mergeCells('C4:E4');
+  ws.mergeCells('C4:F4');
   ws.getCell('C4').value = 'Identificación de usuarios cesados';
   styleHeader(ws.getCell('C4'), FILL.h1);
-  ws.mergeCells('F4:H4');
-  ws.getCell('F4').value = 'Identificación de usuarios no identificados o sin sustento';
-  styleHeader(ws.getCell('F4'), FILL.h2);
+  ws.mergeCells('G4:J4');
+  ws.getCell('G4').value = 'Identificación de usuarios no identificados o sin sustento';
+  styleHeader(ws.getCell('G4'), FILL.h2);
   ws.getRow(4).height = 30;
 
-  ws.mergeCells('C5:E5');
+  ws.mergeCells('C5:F5');
   ws.getCell('C5').value = { text: SHEET_H1, hyperlink: `#'${SHEET_H1}'!A1` };
   styleHeader(ws.getCell('C5'), FILL.h1);
   ws.getCell('C5').font = { color: { argb: argb('#ffffff') }, bold: true, underline: true };
 
-  ws.mergeCells('F5:H5');
-  ws.getCell('F5').value = { text: SHEET_H2, hyperlink: `#'${SHEET_H2}'!A1` };
-  styleHeader(ws.getCell('F5'), FILL.h2);
-  ws.getCell('F5').font = { color: { argb: argb('#ffffff') }, bold: true, underline: true };
+  ws.mergeCells('G5:J5');
+  ws.getCell('G5').value = { text: SHEET_H2, hyperlink: `#'${SHEET_H2}'!A1` };
+  styleHeader(ws.getCell('G5'), FILL.h2);
+  ws.getCell('G5').font = { color: { argb: argb('#ffffff') }, bold: true, underline: true };
 
   ws.getCell('B6').value = 'Aplicación';
   styleHeader(ws.getCell('B6'), FILL.title);
-  const sub = ['N° Hallazgos', 'Hallazgos GDH', 'Hallazgos ACCESOS'];
-  (['C6', 'D6', 'E6'] as const).forEach((ref, i) => {
+  const sub = ['N° Hallazgos', 'Hallazgos GDH', 'Hallazgos ACCESOS', 'GDH | ACCESOS'];
+  (['C6', 'D6', 'E6', 'F6'] as const).forEach((ref, i) => {
     ws.getCell(ref).value = sub[i];
     styleHeader(ws.getCell(ref), FILL.h1);
   });
-  (['F6', 'G6', 'H6'] as const).forEach((ref, i) => {
+  (['G6', 'H6', 'I6', 'J6'] as const).forEach((ref, i) => {
     ws.getCell(ref).value = sub[i];
     styleHeader(ws.getCell(ref), FILL.h2);
   });
-  ws.getCell('I6').value = 'COMENTARIO';
-  styleHeader(ws.getCell('I6'), FILL.comentario);
+  ws.getCell('K6').value = 'COMENTARIO';
+  styleHeader(ws.getCell('K6'), FILL.comentario);
   ws.getRow(6).height = 28;
 
   const writeDataRow = (rowIdx: number, r: ResumenRow, isTotal = false) => {
-    const values = [r.aplicacion, r.h1Total, r.h1Gdh, r.h1Accesos, r.h2Total, r.h2Gdh, r.h2Accesos, ''];
+    const values = [
+      r.aplicacion,
+      r.h1Total, r.h1Gdh, r.h1Accesos, r.h1Ambos,
+      r.h2Total, r.h2Gdh, r.h2Accesos, r.h2Ambos,
+      '',
+    ];
     values.forEach((val, i) => {
       const cell = ws.getCell(rowIdx, i + 2);
       cell.value = val as ExcelJS.CellValue;

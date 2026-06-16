@@ -7,6 +7,7 @@ export interface ResumenAdRow {
   total: number;
   gdh: number;
   accesos: number;
+  ambos: number;
 }
 
 export interface ResumenAd {
@@ -28,6 +29,7 @@ export function buildResumenAd(rows: HallazgoAplicacion[]): ResumenAd {
       total: scoped.length,
       gdh: countByResponsible(scoped, 'GDH'),
       accesos: countByResponsible(scoped, 'ACCESOS'),
+      ambos: countByResponsible(scoped, 'AMBOS'),
     };
   });
 

@@ -33,8 +33,26 @@ function isPositive(value: unknown): boolean {
   return !['', 'NO', '0', 'FALSE', 'N', 'NULL', '-', 'N/A'].includes(v);
 }
 
-export function countByResponsible(rows: Row[], responsible: 'GDH' | 'ACCESOS'): number {
-  return rows.filter((row) => normalize((row as Record<string, unknown>).Responsable) === responsible).length;
+/**
+ * Clasifica el Responsable de forma EXCLUYENTE.
+ * "GDH | ACCESOS" / "ACCESOS | GDH" -> AMBOS.
+ */
+export type ResponsableTipo = 'GDH' | 'ACCESOS' | 'AMBOS' | 'OTRO';
+
+export function classifyResponsible(value: unknown): ResponsableTipo {
+  const v = normalize(value);
+  const hasGdh = v.includes('GDH');
+  const hasAcc = v.includes('ACCESO');
+  if (hasGdh && hasAcc) return 'AMBOS';
+  if (hasGdh) return 'GDH';
+  if (hasAcc) return 'ACCESOS';
+  return 'OTRO';
+}
+
+export function countByResponsible(rows: Row[], responsible: 'GDH' | 'ACCESOS' | 'AMBOS'): number {
+  return rows.filter(
+    (row) => classifyResponsible((row as Record<string, unknown>).Responsable) === responsible,
+  ).length;
 }
 
 /** Junta los comentarios distintos y no vacíos de un escenario. */
@@ -133,15 +151,16 @@ export async function exportResumenAdExcel(
     { width: 16 }, // B Total
     { width: 16 }, // C GDH
     { width: 18 }, // D ACCESOS
-    { width: 14 }, // E Hoja
-    { width: 38 }, // F comentario/resumen libre
+    { width: 18 }, // E GDH | ACCESOS
+    { width: 14 }, // F Hoja
+    { width: 38 }, // G comentario/resumen libre
   ];
 
-  summary.mergeCells('B2:E2');
+  summary.mergeCells('B2:F2');
   summary.getCell('B2').value = 'AD';
   styleSummaryCell(summary.getCell('B2'), 'F7DCCB', true);
 
-  summary.mergeCells('B3:E3');
+  summary.mergeCells('B3:F3');
   summary.getCell('B3').value = 'VIDA-PPS';
   styleSummaryCell(summary.getCell('B3'), 'D9E6F2', true);
 
@@ -150,8 +169,9 @@ export async function exportResumenAdExcel(
     { cell: 'B4', value: 'N° Hallazgos', fill: 'FFFFFF' },
     { cell: 'C4', value: 'Hallazgos GDH', fill: 'FFFFFF' },
     { cell: 'D4', value: 'Hallazgos ACCESOS', fill: 'FFFFFF' },
-    { cell: 'E4', value: 'Hallazgos', fill: 'D9E6F2' },
-    { cell: 'F4', value: 'Comentario', fill: 'FFFFFF' },
+    { cell: 'E4', value: 'Hallazgos GDH | ACCESOS', fill: 'FFFFFF' },
+    { cell: 'F4', value: 'Hallazgos', fill: 'D9E6F2' },
+    { cell: 'G4', value: 'Comentario', fill: 'FFFFFF' },
   ];
 
   headers.forEach(({ cell, value, fill }) => {
@@ -165,20 +185,24 @@ export async function exportResumenAdExcel(
     const total = scenarioRows.length;
     const gdh = countByResponsible(scenarioRows, 'GDH');
     const accesos = countByResponsible(scenarioRows, 'ACCESOS');
+    const ambos = countByResponsible(scenarioRows, 'AMBOS');
 
     summary.getCell(`A${rowIndex}`).value = scenario.title;
     summary.getCell(`B${rowIndex}`).value = total;
     summary.getCell(`C${rowIndex}`).value = gdh;
     summary.getCell(`D${rowIndex}`).value = accesos;
-    summary.getCell(`E${rowIndex}`).value = {
+    summary.getCell(`E${rowIndex}`).value = ambos;
+    summary.getCell(`F${rowIndex}`).value = {
       text: scenario.code,
       hyperlink: `#'${scenario.code}'!A1`,
     };
-    summary.getCell(`F${rowIndex}`).value = collectComentarios(scenarioRows);
+    summary.getCell(`G${rowIndex}`).value = collectComentarios(scenarioRows);
 
-    ['A', 'B', 'C', 'D', 'E', 'F'].forEach((col) => styleDataCell(summary.getCell(`${col}${rowIndex}`)));
+    ['A', 'B', 'C', 'D', 'E', 'F', 'G'].forEach((col) =>
+      styleDataCell(summary.getCell(`${col}${rowIndex}`)),
+    );
 
-    summary.getCell(`E${rowIndex}`).font = {
+    summary.getCell(`F${rowIndex}`).font = {
       name: 'Calibri',
       size: 11,
       color: { argb: '0563C1' },
