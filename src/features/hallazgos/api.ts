@@ -24,7 +24,10 @@ function pickCollection(raw: unknown, keys: string[]): Row[] {
   return [];
 }
 
-/** Hallazgos de Aplicaciones: /hallazgos/apps -> data.reporte_apps */
+/**
+ * Hallazgos de Aplicaciones: /hallazgos/apps -> data.reporte_apps
+ * NO recibe fecha de referencia (es el único hallazgo sin `fecha_ref`).
+ */
 export async function fetchHallazgos(): Promise<Row[]> {
   try {
     return pickCollection(await getJson(ENDPOINT_APPS), ['reporte_apps']);
@@ -37,7 +40,13 @@ export async function fetchHallazgos(): Promise<Row[]> {
   }
 }
 
-/** Hallazgos de Active Directory: /hallazgos/ad -> data.reporte_ad */
-export async function fetchHallazgosAd(): Promise<Row[]> {
-  return pickCollection(await getJson(ENDPOINT_AD), ['reporte_ad']);
+/**
+ * Hallazgos de Active Directory: /hallazgos/ad -> data.reporte_ad
+ *
+ * `fechaRef` (YYYY-MM-DD) se envía como query `?fecha_ref=` cuando está
+ * presente. El disparo es manual desde la vista (igual que Base de Datos).
+ */
+export async function fetchHallazgosAd(fechaRef?: string): Promise<Row[]> {
+  const qs = fechaRef ? `?fecha_ref=${encodeURIComponent(fechaRef)}` : '';
+  return pickCollection(await getJson(`${ENDPOINT_AD}${qs}`), ['reporte_ad']);
 }

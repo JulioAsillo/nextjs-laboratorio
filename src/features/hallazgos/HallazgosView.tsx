@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactNode, useMemo, useState } from 'react';
-import { Download, RefreshCw, Loader2, Search, Play } from 'lucide-react';
+import { Download, RefreshCw, Loader2, Search, Play, CalendarClock } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/Button';
 import { useTextFilter } from '@/lib/text-filter';
@@ -17,7 +17,11 @@ interface HallazgosViewProps<S> {
   breadcrumb: string[];
   /** Clave SWR (ver features/hallazgos/keys.ts). */
   swrKey: string;
-  fetcher: () => Promise<HallazgoAplicacion[]>;
+  /**
+   * Fetcher de filas. Puede aceptar opcionalmente una fecha de referencia
+   * (YYYY-MM-DD); Aplicaciones la ignora, AD la envía como `?fecha_ref=`.
+   */
+  fetcher: (fechaRef?: string) => Promise<HallazgoAplicacion[]>;
   columns: ColumnDef[];
   /** Path del endpoint, solo para el mensaje de error (p.ej. "/hallazgos/apps"). */
   endpointHint: string;
@@ -27,6 +31,36 @@ interface HallazgosViewProps<S> {
   renderSummary: (summary: S) => ReactNode;
   /** Exportación opcional (Aplicaciones la usa; AD no). */
   onExport?: (rows: HallazgoAplicacion[]) => Promise<void>;
+  /**
+   * Si es `true`, muestra el selector de fecha de referencia y la envía al
+   * fetcher como `?fecha_ref=`. Aplica a todos los hallazgos menos Aplicaciones.
+   */
+  withFechaRef?: boolean;
+}
+
+/** Selector de fecha de referencia (calendario nativo, estilo corporativo). */
+function FechaRefField({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <label className="inline-flex items-center gap-2 rounded border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-body-md text-on-surface-variant focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/30">
+      <CalendarClock size={16} className="text-primary" />
+      <span className="text-label-caps uppercase">Fecha de referencia</span>
+      <input
+        type="date"
+        value={value}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.value)}
+        className="bg-transparent text-body-md text-on-surface outline-none disabled:opacity-50"
+      />
+    </label>
+  );
 }
 
 /**
@@ -43,6 +77,7 @@ export function HallazgosView<S>({
   summarize,
   renderSummary,
   onExport,
+  withFechaRef = false,
 }: HallazgosViewProps<S>) {
   const { data, error, isValidating, mutate } = useHallazgos(swrKey, fetcher);
 
@@ -52,6 +87,29 @@ export function HallazgosView<S>({
 
   const { query, setQuery, deferredQuery, filtered: rows, isFiltering } = useTextFilter(allRows, keys);
   const summary = useMemo(() => summarize(rows), [rows, summarize]);
+
+  const [fechaRef, setFechaRef] = useState('');
+  const [generating, setGenerating] = useState(false);
+  const busy = generating || isValidating;
+
+  /**
+   * Dispara la consulta al backend. Con `withFechaRef`, inyecta el resultado
+   * vía `mutate(promise)` para poder pasar la fecha; si no, revalida el fetcher
+   * enlazado por SWR (comportamiento original de Aplicaciones).
+   */
+  async function trigger() {
+    if (busy) return;
+    if (!withFechaRef) {
+      await mutate();
+      return;
+    }
+    setGenerating(true);
+    try {
+      await mutate(fetcher(fechaRef || undefined), { revalidate: false });
+    } finally {
+      setGenerating(false);
+    }
+  }
 
   const [exporting, setExporting] = useState(false);
   async function handleExport() {
@@ -71,11 +129,12 @@ export function HallazgosView<S>({
       actions={
         loaded ? (
           <>
+            {withFechaRef && <FechaRefField value={fechaRef} onChange={setFechaRef} disabled={busy} />}
             <Button
               variant="ghost"
-              icon={<RefreshCw size={16} className={isValidating ? 'animate-spin' : ''} />}
-              onClick={() => mutate()}
-              disabled={isValidating}
+              icon={<RefreshCw size={16} className={busy ? 'animate-spin' : ''} />}
+              onClick={trigger}
+              disabled={busy}
             >
               Actualizar
             </Button>
@@ -92,19 +151,22 @@ export function HallazgosView<S>({
         ) : undefined
       }
     >
-      {!loaded && !isValidating && !error && (
+      {!loaded && !busy && !error && (
         <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-outline-variant bg-surface-container-lowest p-12 text-center shadow-ambient">
           <p className="text-body-lg text-on-surface">Aún no has generado los hallazgos.</p>
           <p className="max-w-md text-body-md text-on-surface-variant">
-            La consulta al backend solo se ejecuta cuando lo pides.
+            {withFechaRef
+              ? 'Elige la fecha de referencia y genera. La consulta al backend solo se ejecuta cuando lo pides.'
+              : 'La consulta al backend solo se ejecuta cuando lo pides.'}
           </p>
-          <Button icon={<Play size={16} />} onClick={() => mutate()}>
+          {withFechaRef && <FechaRefField value={fechaRef} onChange={setFechaRef} />}
+          <Button icon={<Play size={16} />} onClick={trigger}>
             Generar Hallazgos
           </Button>
         </div>
       )}
 
-      {isValidating && !loaded && (
+      {busy && !loaded && (
         <div className="flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest p-10 text-on-surface-variant">
           <Loader2 size={18} className="animate-spin" /> Generando hallazgos…
         </div>
@@ -117,7 +179,7 @@ export function HallazgosView<S>({
             <code className="font-mono">{endpointHint}</code> esté activo y la variable{' '}
             <code className="font-mono">NEXT_PUBLIC_API_BASE_URL</code>.
           </span>
-          <Button variant="ghost" icon={<RefreshCw size={16} />} onClick={() => mutate()}>
+          <Button variant="ghost" icon={<RefreshCw size={16} />} onClick={trigger}>
             Reintentar
           </Button>
         </div>
@@ -138,7 +200,7 @@ export function HallazgosView<S>({
               />
             </div>
             <p className="flex items-center gap-2 text-body-md text-on-surface-variant">
-              {(isFiltering || isValidating) && <Loader2 size={14} className="animate-spin" />}
+              {(isFiltering || busy) && <Loader2 size={14} className="animate-spin" />}
               {nf.format(rows.length)} registro{rows.length === 1 ? '' : 's'}
               {deferredQuery.trim() && ` de ${nf.format(allRows.length)}`}
             </p>

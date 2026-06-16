@@ -20,6 +20,7 @@ export default function ActiveDirectoryPage() {
       summarize={computeAdSummary}
       renderSummary={(summary) => <AdSummaryCards summary={summary} />}
       onExport={exportAdToExcel}
+      withFechaRef
     />
   );
 }

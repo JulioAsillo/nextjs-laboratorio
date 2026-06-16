@@ -7,8 +7,9 @@ import { getJson } from '@/lib/http';
  * GET http://localhost:8000/hallazgos/dbs  ->  { data: { db_generales: [...], db_vida: [...] } }
  * Devuelve ambas hojas en un solo objeto para alimentar las dos pestañas.
  *
- * `fechaCorte` (YYYY-MM-DD) se envía como query `?fecha_corte=` cuando está
- * presente. El backend aún no lo procesa, pero el contrato ya queda listo.
+ * `fechaRef` (YYYY-MM-DD) se envía como query `?fecha_ref=` cuando está
+ * presente. Mismo nombre de parámetro que en Hallazgo AD: todos los hallazgos
+ * (excepto Aplicaciones) comparten el contrato `?fecha_ref={fecha}`.
  */
 const ENDPOINT_DBS = process.env.NEXT_PUBLIC_BD_HALLAZGOS_ENDPOINT ?? '/hallazgos/dbs';
 
@@ -26,8 +27,8 @@ function pick(raw: unknown, keys: string[]): HallazgoAplicacion[] {
   return [];
 }
 
-export async function fetchBdHallazgoDbs(fechaCorte?: string): Promise<BdHallazgoDbs> {
-  const qs = fechaCorte ? `?fecha_corte=${encodeURIComponent(fechaCorte)}` : '';
+export async function fetchBdHallazgoDbs(fechaRef?: string): Promise<BdHallazgoDbs> {
+  const qs = fechaRef ? `?fecha_ref=${encodeURIComponent(fechaRef)}` : '';
   const raw = await getJson(`${ENDPOINT_DBS}${qs}`);
   return {
     vida: pick(raw, ['db_vida', 'vida']),
