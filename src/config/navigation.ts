@@ -23,24 +23,24 @@ export const navigation: NavItem[] = [
         children: [
           {
             label: 'Aplicaciones',
-            href: '/certificacion/hallazgos/aplicaciones',
+            href: '/certificacion-usuarios/hallazgos/aplicaciones',
             icon: AppWindow,
             children: [
               {
                 label: 'Generar Resumen',
-                href: '/certificacion/hallazgos/aplicaciones/generar-resumen',
+                href: '/certificacion-usuarios/hallazgos/aplicaciones/generar-resumen',
                 icon: FileSpreadsheet,
               },
             ],
           },
           {
             label: 'Active Directory',
-            href: '/certificacion/hallazgos/active-directory',
+            href: '/certificacion-usuarios/hallazgos/active-directory',
             icon: Network,
             children: [
               {
                 label: 'Generar Resumen',
-                href: '/certificacion/hallazgos/active-directory/generar-resumen',
+                href: '/certificacion-usuarios/hallazgos/active-directory/generar-resumen',
                 icon: FileSpreadsheet,
               },
             ],
@@ -49,7 +49,7 @@ export const navigation: NavItem[] = [
       },
       {
         label: 'Cargar Información',
-        href: '/certificacion/cargar-informacion',
+        href: '/certificacion-usuarios/cargar-informacion',
         icon: Upload,
       },
     ],

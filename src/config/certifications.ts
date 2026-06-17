@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { ShieldCheck, Database, FileSearch, FileSpreadsheet, Upload } from 'lucide-react';
+import { ShieldCheck, Database, FileSearch, FileSpreadsheet, Upload, UsersIcon } from 'lucide-react';
 import { navigation, type NavItem } from './navigation';
 
 /**
@@ -50,13 +50,33 @@ const bdNav: NavItem[] = [
   },
 ];
 
+const perfilesNav: NavItem[] = [
+  {
+    label: 'Hallazgo de Perfiles',
+    href: '/certificacion-perfiles/hallazgos',
+    icon: FileSearch,
+    children:[
+      {
+        label: 'Generar Resumen',
+        href: '/certificacion-perfiles/hallazgos/generar-resumen',
+        icon: FileSpreadsheet,
+      },
+    ], 
+  },
+  {
+    label: 'Cargar Información',
+    href: '/certificacion-perfiles/cargar-informacion',
+    icon: Upload,
+  },
+];
+
 export const certifications: Certification[] = [
   {
     id: 'usuarios',
     label: 'Certificación de Usuarios',
     description: 'Hallazgos de acceso de usuarios en aplicaciones y Active Directory.',
     icon: ShieldCheck,
-    basePath: '/certificacion',
+    basePath: '/certificacion-usuarios',
     nav: usuariosNav,
   },
   {
@@ -67,6 +87,14 @@ export const certifications: Certification[] = [
     basePath: '/certificacion-bd',
     nav: bdNav,
   },
+  {
+    id: 'perfiles',
+    label: 'Certificación de Perfiles',
+    description: 'Auditoría de perfiles de aplicación, dueños y segregación de funciones',
+    icon: UsersIcon,
+    basePath: '/certificacion-perfiles',
+    nav: perfilesNav,
+  }
 ];
 
 /** Primer `href` que encuentra en un árbol de navegación (la "landing" del módulo). */
