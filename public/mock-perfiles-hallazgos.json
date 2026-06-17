@@ -1,0 +1,82 @@
+{
+  "data": {
+    "reporte_perfiles": [
+      {
+        "Nombre Archivo": "perfiles_pps_2026.xlsx",
+        "Perfil": "ADM_SISTEMAS",
+        "Sistema": "Active Directory",
+        "Tipo Perfil": "Administrador",
+        "Usuarios Asignados": "14",
+        "Fecha Creación": "2021-03-12",
+        "Fecha Ultima Recertificación": "2024-01-10",
+        "DNI Dueño": "40123456",
+        "Dueño Perfil": "Gerencia TI",
+        "Escenario": "Permisos Excesivos + Sin Recertificar 365d",
+        "Perfil Sin Dueño": "No",
+        "Permisos Excesivos": "Sí",
+        "Conflicto SoD": "No",
+        "Perfil Inactivo": "No",
+        "Sin Recertificar 365d": "Sí",
+        "Responsable": "Seguridad IT",
+        "Comentario": "Revisar membresías privilegiadas."
+      },
+      {
+        "Nombre Archivo": "perfiles_pps_2026.xlsx",
+        "Perfil": "CONSULTA_RRHH",
+        "Sistema": "GDH",
+        "Tipo Perfil": "Consulta",
+        "Usuarios Asignados": "58",
+        "Fecha Creación": "2019-08-01",
+        "Fecha Ultima Recertificación": "2025-11-20",
+        "DNI Dueño": "",
+        "Dueño Perfil": "",
+        "Escenario": "Perfil Sin Dueño",
+        "Perfil Sin Dueño": "Sí",
+        "Permisos Excesivos": "No",
+        "Conflicto SoD": "No",
+        "Perfil Inactivo": "No",
+        "Sin Recertificar 365d": "No",
+        "Responsable": "RR.HH.",
+        "Comentario": "Asignar dueño funcional."
+      },
+      {
+        "Nombre Archivo": "perfiles_vida_2026.xlsx",
+        "Perfil": "PAGOS_TOTAL",
+        "Sistema": "Core Vida",
+        "Tipo Perfil": "Transaccional",
+        "Usuarios Asignados": "6",
+        "Fecha Creación": "2020-05-22",
+        "Fecha Ultima Recertificación": "2023-02-14",
+        "DNI Dueño": "44788990",
+        "Dueño Perfil": "Operaciones",
+        "Escenario": "Conflicto SoD + Sin Recertificar 365d",
+        "Perfil Sin Dueño": "No",
+        "Permisos Excesivos": "No",
+        "Conflicto SoD": "Sí",
+        "Perfil Inactivo": "No",
+        "Sin Recertificar 365d": "Sí",
+        "Responsable": "Riesgo Operacional",
+        "Comentario": "Crear/Aprobar pagos en el mismo perfil."
+      },
+      {
+        "Nombre Archivo": "perfiles_vida_2026.xlsx",
+        "Perfil": "LEGACY_BATCH",
+        "Sistema": "Core Vida",
+        "Tipo Perfil": "Servicio",
+        "Usuarios Asignados": "0",
+        "Fecha Creación": "2016-01-01",
+        "Fecha Ultima Recertificación": "2020-01-01",
+        "DNI Dueño": "",
+        "Dueño Perfil": "",
+        "Escenario": "Perfil Inactivo + Perfil Sin Dueño + Sin Recertificar 365d",
+        "Perfil Sin Dueño": "Sí",
+        "Permisos Excesivos": "No",
+        "Conflicto SoD": "No",
+        "Perfil Inactivo": "Sí",
+        "Sin Recertificar 365d": "Sí",
+        "Responsable": "Seguridad IT",
+        "Comentario": "Candidato a baja."
+      }
+    ]
+  }
+}
