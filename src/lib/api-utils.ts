@@ -1,3 +1,6 @@
+import { NextRequest, NextResponse } from "next/server";
+import { ZodSchema } from "zod";
+
 /**
  * Helper para crear una respuesta de error estándar
  */
