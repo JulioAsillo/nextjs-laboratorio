@@ -1,7 +1,7 @@
 'use client';
 
 import { Database } from 'lucide-react';
-import type { AdSummary } from '../summary-ad';
+import type { AdSummary } from '../active-directory/summary-ad';
 import { palette } from '@/lib/theme';
 
 const nf = new Intl.NumberFormat('es-PE');

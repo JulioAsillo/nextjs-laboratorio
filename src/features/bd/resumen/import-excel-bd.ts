@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs';
 import { bdVidaColumns, bdGeneralesColumns } from '../bd-columns';
-import type { ColumnDef } from '@/features/hallazgos/columns';
+import type { ColumnDef } from '@/features/usuarios/hallazgos/aplicaciones/columns';
 import type { HallazgoAplicacion } from '@/types/hallazgo';
 
 export interface BdDetail {

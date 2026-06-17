@@ -12,20 +12,20 @@ import {
 } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/Button';
-import { parseDetailExcelAd } from '@/features/hallazgos/resumen-ad/import-excel-ad';
-import { buildResumenAd, type ResumenAd } from '@/features/hallazgos/resumen-ad/resumen-ad';
-import { exportResumenAdExcel } from '@/features/hallazgos/export-resumen-ad';
+import { parseDetailExcel } from '@/features/usuarios/hallazgos/aplicaciones/resumen/import-excel';
+import { buildResumen, type Resumen } from '@/features/usuarios/hallazgos/aplicaciones/resumen/resumen';
+import { exportResumenExcel } from '@/features/usuarios/hallazgos/aplicaciones/resumen/export-resumen-excel';
 import type { HallazgoAplicacion } from '@/types/hallazgo';
 
 const nf = new Intl.NumberFormat('es-PE');
 
 interface Resultado {
   fileName: string;
-  resumen: ResumenAd;
+  resumen: Resumen;
   detailRows: HallazgoAplicacion[];
 }
 
-export default function GenerarResumenActiveDirectoryPage() {
+export default function GenerarResumenPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -41,9 +41,9 @@ export default function GenerarResumenActiveDirectoryPage() {
     }
     setProcessing(true);
     try {
-      const detailRows = await parseDetailExcelAd(file);
+      const detailRows = await parseDetailExcel(file);
       if (!detailRows.length) throw new Error('No se encontraron filas de datos en el archivo.');
-      const resumen = buildResumenAd(detailRows);
+      const resumen = buildResumen(detailRows);
       setResultado({ fileName: file.name, resumen, detailRows });
     } catch (err) {
       setResultado(null);
@@ -70,7 +70,7 @@ export default function GenerarResumenActiveDirectoryPage() {
     if (!resultado) return;
     setDownloading(true);
     try {
-      await exportResumenAdExcel(resultado.detailRows);
+      await exportResumenExcel(resultado.resumen, resultado.detailRows);
     } finally {
       setDownloading(false);
     }
@@ -81,10 +81,12 @@ export default function GenerarResumenActiveDirectoryPage() {
     setError(null);
   }
 
+  const total = resultado?.resumen.total;
+
   return (
     <AppShell
       title="Generar Resumen"
-      breadcrumb={['Certificación de Usuarios', 'Hallazgos', 'Active Directory', 'Generar Resumen']}
+      breadcrumb={['Certificación de Usuarios', 'Hallazgos', 'Aplicaciones', 'Generar Resumen']}
     >
       <div className="mx-auto flex max-w-3xl flex-col gap-5">
         {/* Instrucciones */}
@@ -93,19 +95,19 @@ export default function GenerarResumenActiveDirectoryPage() {
           <ol className="mt-3 space-y-2 text-body-md text-on-surface-variant">
             <li>
               <span className="font-semibold text-on-surface">1.</span> En{' '}
-              <span className="font-semibold text-on-surface">Active Directory</span> exporta el
-              Excel de detalle.
+              <span className="font-semibold text-on-surface">Aplicaciones</span> exporta el Excel
+              de detalle.
             </li>
             <li>
               <span className="font-semibold text-on-surface">2.</span> Llena la columna{' '}
               <span className="font-semibold text-on-surface">Responsable</span> con{' '}
               <code className="font-mono">GDH</code>, <code className="font-mono">ACCESOS</code> o{' '}
-              <code className="font-mono">GDH | ACCESOS</code> (y{' '}
-              <span className="font-semibold text-on-surface">Comentario</span> si aplica) y guarda.
+              <code className="font-mono">GDH | ACCESOS</code> y
+              guarda.
             </li>
             <li>
               <span className="font-semibold text-on-surface">3.</span> Sube aquí ese mismo archivo
-              y descarga el resumen por escenarios (H1_AD a H7_AD).
+              y descarga el resumen por escenarios.
             </li>
           </ol>
         </div>
@@ -137,7 +139,7 @@ export default function GenerarResumenActiveDirectoryPage() {
               <>
                 <UploadCloud size={36} className="text-primary" />
                 <p className="text-body-lg text-on-surface">
-                  Arrastra el Excel de AD aquí o haz clic para seleccionarlo
+                  Arrastra el Excel aquí o haz clic para seleccionarlo
                 </p>
                 <p className="text-body-md text-on-surface-variant">Formato .xlsx</p>
               </>
@@ -160,52 +162,53 @@ export default function GenerarResumenActiveDirectoryPage() {
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-3">
-              <Stat label="Registros AD" value={resultado.resumen.totalRows} />
-              <Stat label="Escenarios" value={resultado.resumen.rows.length} />
-              <Stat label="Total Hallazgos" value={resultado.resumen.totalHallazgos} />
+            <div className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-4">
+              <Stat label="Aplicaciones" value={resultado.resumen.rows.length} />
+              <Stat label="Cesados (H1)" value={total!.h1Total} />
+              <Stat label="No Identificados (H2)" value={total!.h2Total} />
+              <Stat label="Total Hallazgos" value={total!.h1Total + total!.h2Total} />
             </div>
 
-            {/* Vista previa por escenario */}
+            {/* Vista previa */}
             <div className="thin-scroll max-h-72 overflow-auto border-t border-outline-variant">
               <table className="min-w-full text-table-data">
                 <thead className="sticky top-0 bg-surface-container">
                   <tr className="text-left text-on-surface-variant">
-                    <th className="px-4 py-2">Hoja</th>
-                    <th className="px-4 py-2">Escenario</th>
-                    <th className="px-4 py-2 text-right">N°</th>
-                    <th className="px-4 py-2 text-right">GDH</th>
-                    <th className="px-4 py-2 text-right">ACCESOS</th>
-                    <th className="px-4 py-2 text-right">GDH | ACC</th>
+                    <th className="px-4 py-2">Aplicación</th>
+                    <th className="px-4 py-2 text-right">H1 N°</th>
+                    <th className="px-4 py-2 text-right">H1 GDH</th>
+                    <th className="px-4 py-2 text-right">H1 ACC</th>
+                    <th className="px-4 py-2 text-right">H1 A+G</th>
+                    <th className="px-4 py-2 text-right">H2 N°</th>
+                    <th className="px-4 py-2 text-right">H2 GDH</th>
+                    <th className="px-4 py-2 text-right">H2 ACC</th>
+                    <th className="px-4 py-2 text-right">H2 A+G</th>
                   </tr>
                 </thead>
                 <tbody>
                   {resultado.resumen.rows.map((r) => (
-                    <tr key={r.code} className="border-t border-outline-variant/50">
-                      <td className="px-4 py-1.5 font-semibold text-primary">{r.code}</td>
-                      <td className="max-w-[360px] truncate px-4 py-1.5 text-on-surface" title={r.title}>
-                        {r.title}
-                      </td>
-                      <td className="px-4 py-1.5 text-right">{r.total}</td>
-                      <td className="px-4 py-1.5 text-right">{r.gdh}</td>
-                      <td className="px-4 py-1.5 text-right">{r.accesos}</td>
-                      <td className="px-4 py-1.5 text-right">{r.ambos}</td>
+                    <tr key={r.aplicacion} className="border-t border-outline-variant/50">
+                      <td className="px-4 py-1.5 text-on-surface">{r.aplicacion}</td>
+                      <td className="px-4 py-1.5 text-right">{r.h1Total}</td>
+                      <td className="px-4 py-1.5 text-right">{r.h1Gdh}</td>
+                      <td className="px-4 py-1.5 text-right">{r.h1Accesos}</td>
+                      <td className="px-4 py-1.5 text-right">{r.h1Ambos}</td>
+                      <td className="px-4 py-1.5 text-right">{r.h2Total}</td>
+                      <td className="px-4 py-1.5 text-right">{r.h2Gdh}</td>
+                      <td className="px-4 py-1.5 text-right">{r.h2Accesos}</td>
+                      <td className="px-4 py-1.5 text-right">{r.h2Ambos}</td>
                     </tr>
                   ))}
                   <tr className="border-t-2 border-outline bg-surface-container-high font-semibold text-on-surface">
-                    <td className="px-4 py-2" colSpan={2}>
-                      TOTAL
-                    </td>
-                    <td className="px-4 py-2 text-right">{resultado.resumen.totalHallazgos}</td>
-                    <td className="px-4 py-2 text-right">
-                      {resultado.resumen.rows.reduce((a, r) => a + r.gdh, 0)}
-                    </td>
-                    <td className="px-4 py-2 text-right">
-                      {resultado.resumen.rows.reduce((a, r) => a + r.accesos, 0)}
-                    </td>
-                    <td className="px-4 py-2 text-right">
-                      {resultado.resumen.rows.reduce((a, r) => a + r.ambos, 0)}
-                    </td>
+                    <td className="px-4 py-2">TOTAL</td>
+                    <td className="px-4 py-2 text-right">{total!.h1Total}</td>
+                    <td className="px-4 py-2 text-right">{total!.h1Gdh}</td>
+                    <td className="px-4 py-2 text-right">{total!.h1Accesos}</td>
+                    <td className="px-4 py-2 text-right">{total!.h1Ambos}</td>
+                    <td className="px-4 py-2 text-right">{total!.h2Total}</td>
+                    <td className="px-4 py-2 text-right">{total!.h2Gdh}</td>
+                    <td className="px-4 py-2 text-right">{total!.h2Accesos}</td>
+                    <td className="px-4 py-2 text-right">{total!.h2Ambos}</td>
                   </tr>
                 </tbody>
               </table>

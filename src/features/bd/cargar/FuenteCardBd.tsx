@@ -6,12 +6,12 @@ import {
   Files, CloudUpload, Check, Table2, RefreshCw, Database, AlertTriangle, Layers, Trash2,
 } from 'lucide-react';
 import clsx from 'clsx';
-import type { UploadSlot } from '@/features/cargar/fuentes';
+import type { UploadSlot } from '@/features/usuarios/cargar/fuentes';
 import type { BdFuente } from './fuentes';
-import { FORMATOS } from '@/features/cargar/fuentes';
-import { readHeaders } from '@/features/cargar/read-headers';
-import { isAllowedFormat, validateColumns, type ColumnValidation } from '@/features/cargar/validate-fuente';
-import { mergeFilesToXlsx, ORIGIN_COLUMN } from '@/features/cargar/merge-fuente';
+import { FORMATOS } from '@/features/usuarios/cargar/fuentes';
+import { readHeaders } from '@/features/usuarios/cargar/read-headers';
+import { isAllowedFormat, validateColumns, type ColumnValidation } from '@/features/usuarios/cargar/validate-fuente';
+import { mergeFilesToXlsx, ORIGIN_COLUMN } from '@/features/usuarios/cargar/merge-fuente';
 import { Button } from '@/components/ui/Button';
 import { uploadFuenteBd, deleteFuenteBd, markUploadedBd, isSlotUploadedBd, clearFuenteBd } from '../cargar/upload';
 

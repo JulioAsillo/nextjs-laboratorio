@@ -1,10 +1,94 @@
-/node_modules
-/.next/
-/out/
-/build
-.DS_Store
+# .gitignore - Patrones de Git para el proyecto
+
+# ===== AMBIENTE Y SECRETOS =====
+# CRÍTICO: Nunca commitear archivos .env con valores reales
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Otros archivos de configuración sensibles
+.secret
 *.pem
+*.key
+*.cert
+
+# ===== BUILD OUTPUT =====
+.next
+dist
+out
+build
+
+# ===== DEPENDENCIAS =====
+node_modules
+package-lock.json.bak
+yarn.lock.bak
+
+# ===== IDE Y EDITORS =====
+.vscode
+.vscode/*
+!.vscode/extensions.json
+.idea
+.idea/*
+*.swp
+*.swo
+*.iml
+*.sublime-project
+*.sublime-workspace
+
+# ===== OS =====
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ===== LOGS =====
+*.log
 npm-debug.log*
-.env*.local
-/coverage
-next-env.d.ts
+npm-debug.log*.gz
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# ===== TEMP FILES =====
+.tmp
+.temp
+tmp
+temp
+*.tmp
+.cache
+.parcel-cache
+
+# ===== MONOREPO / TURBO =====
+.turbo
+turbo.json.local
+
+# ===== DATABASE =====
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+
+# ===== MISC =====
+# Dependencias opcionales
+optional-dependency.tgz
+
+# Archivos de backup
+*.bak
+*.backup
+*~
+
+# Archivos de merge
+*.CONFLICT
+*.orig
+
+# Ignorar solo archivos específicos en src/
+# (para evitar accidentes de que se comitee algo importante)
+# Descomentar si es necesario:
+# src/**/*.local.ts

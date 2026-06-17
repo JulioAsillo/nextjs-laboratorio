@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import CargarInformacionPage from '@/features/cargar/CargarInformacionPage';
+import CargarInformacionPage from '@/features/usuarios/cargar/CargarInformacionPage';
 
 export default function Page() {
   return (

@@ -8,7 +8,7 @@ import { useTextFilter } from '@/lib/text-filter';
 import { useHallazgoCache } from '@/lib/use-hallazgo-cache';
 import { DataTable } from './components/DataTable';
 import { useHallazgos } from './use-hallazgos';
-import type { ColumnDef } from './columns';
+import type { ColumnDef } from './aplicaciones/columns';
 import type { HallazgoAplicacion } from '@/types/hallazgo';
 
 const nf = new Intl.NumberFormat('es-PE');

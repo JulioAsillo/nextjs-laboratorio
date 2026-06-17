@@ -1,5 +1,5 @@
-import type { Fuente, UploadSlot } from '@/features/cargar/fuentes';
-import { fuentes as usuariosFuentes } from '@/features/cargar/fuentes';
+import type { Fuente, UploadSlot } from '@/features/usuarios/cargar/fuentes';
+import { fuentes as usuariosFuentes } from '@/features/usuarios/cargar/fuentes';
 
 /**
  * Catálogo de fuentes de "Cargar Información" de la Certificación de Base de Datos.

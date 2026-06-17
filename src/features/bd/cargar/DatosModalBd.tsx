@@ -3,8 +3,8 @@
 import { useEffect, useMemo } from 'react';
 import useSWR from 'swr';
 import { X, CalendarClock } from 'lucide-react';
-import { deriveColumns, type DatosResult } from '@/features/cargar/datos';
-import { PaginatedTable } from '@/features/cargar/components/PaginatedTable';
+import { deriveColumns, type DatosResult } from '@/features/usuarios/cargar/datos';
+import { PaginatedTable } from '@/features/usuarios/cargar/components/PaginatedTable';
 import { fetchDatosBd, bdDatosKey } from './datos';
 
 interface DatosModalBdProps {

@@ -1,7 +1,7 @@
 'use client';
 
 import { Layers } from 'lucide-react';
-import type { Summary } from '../summary';
+import type { Summary } from '../aplicaciones/summary';
 import { palette } from '@/lib/theme';
 
 const nf = new Intl.NumberFormat('es-PE');

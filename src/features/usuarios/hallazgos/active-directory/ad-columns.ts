@@ -1,4 +1,4 @@
-import type { ColumnDef } from './columns';
+import type { ColumnDef } from '../aplicaciones/columns';
 
 /** Clave del campo Escenario en el reporte de AD (escenarios concatenados con " + "). */
 export const KEY_AD_ESCENARIO = 'Escenario';

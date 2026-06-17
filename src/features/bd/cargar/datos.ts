@@ -1,5 +1,5 @@
 import { getJson } from '@/lib/http';
-import { fetchDatosApp, type DatosRow, type DatosResult } from '@/features/cargar/datos';
+import { fetchDatosApp, type DatosRow, type DatosResult } from '@/features/usuarios/cargar/datos';
 import { BD_DBS_PATH } from './endpoints';
 import type { BdFuente } from './fuentes';
 

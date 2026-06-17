@@ -3,7 +3,7 @@ import { saveAs } from 'file-saver';
 import { colorGroups } from '@/lib/theme';
 import { writeCell } from '@/lib/excel/cell-format';
 import { styleHeader } from '@/lib/excel/style';
-import type { ColumnDef } from '@/features/hallazgos/columns';
+import type { ColumnDef } from '@/features/usuarios/hallazgos/aplicaciones/columns';
 import type { HallazgoAplicacion } from '@/types/hallazgo';
 import { bdVidaColumns, bdGeneralesColumns } from './bd-columns';
 

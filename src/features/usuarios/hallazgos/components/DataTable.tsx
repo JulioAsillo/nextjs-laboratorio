@@ -2,7 +2,7 @@
 
 import { useMemo, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import type { ColumnDef } from '../columns';
+import type { ColumnDef } from '../aplicaciones/columns';
 import { colorGroups } from '@/lib/theme';
 import type { HallazgoAplicacion } from '@/types/hallazgo';
 

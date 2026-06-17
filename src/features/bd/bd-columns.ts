@@ -1,4 +1,4 @@
-import type { ColumnDef } from '@/features/hallazgos/columns';
+import type { ColumnDef } from '@/features/usuarios/hallazgos/aplicaciones/columns';
 
 /**
  * Definiciones de columnas para el "Hallazgo Base de Datos".

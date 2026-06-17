@@ -1,6 +1,6 @@
 import { certifications } from '@/config/certifications';
 import type { NavItem } from '@/config/navigation';
-import { fuentes, type Fuente } from '@/features/cargar/fuentes';
+import { fuentes, type Fuente } from '@/features/usuarios/cargar/fuentes';
 import { bdFuentes } from '@/features/bd/cargar/fuentes';
 
 /**
