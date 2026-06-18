@@ -128,7 +128,10 @@ export const fuentes: Fuente[] = [
     id: 'sox-vida', label: 'Sox Vida', group: 'Aplicaciones', appsKey: 'sox-vida',
     slots: [{ fileName: 'usuarios_sox_vida', columns: ['IDUSUARIO', 'NOMBRE_APLICACION', 'CODIGO_ROL', 'APELLIDO_PATERNO', 'APELLIDO_MATERNO', 'NOMBRES', 'NOMBRE_ROL', 'BLOQUEADO', 'AUDITORIA_CREACION', 'AUDITORIA_MODIFICACION'] }],
   },
-
+  {
+    id: 'ssa', label: 'SSA', group: 'Aplicaciones', appsKey: 'ssa',
+    slots: [{ fileName: 'usuarios_ssa', columns: ['CODUSRPPS', 'CODCOLABORADOR', 'NOMUSRPPS', 'MAIL', 'STSUSRPPS'] }],
+  },
   // ---------- Otros Reportes ----------
   {
     id: 'ad', label: 'Active Directory', group: 'Otros Reportes', appsKey: 'ad',
