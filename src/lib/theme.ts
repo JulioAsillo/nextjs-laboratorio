@@ -25,11 +25,14 @@ export const palette = {
 } as const;
 
 /**
- * Los 6 grupos de color de cabecera.
+ * Grupos de color de cabecera.
  * Cada grupo define el relleno (fill) y el color de texto legible sobre ese relleno.
  * Estos hex se usan IDÉNTICOS en la tabla (badge de cabecera) y en el Excel exportado.
+ *
+ * C1–C8 los usan Usuarios y Base de Datos. C9–C10 se añaden para el Hallazgo de
+ * Perfiles (Rol Final y validaciones de Matriz de Roles).
  */
-export type ColorGroupId = 'C1' | 'C2' | 'C3' | 'C4' | 'C5' | 'C6' | 'C7' | 'C8';
+export type ColorGroupId = 'C1' | 'C2' | 'C3' | 'C4' | 'C5' | 'C6' | 'C7' | 'C8' | 'C9' | 'C10';
 
 export interface ColorGroup {
   id: ColorGroupId;
@@ -47,4 +50,7 @@ export const colorGroups: Record<ColorGroupId, ColorGroup> = {
   C6: { id: 'C6', label: 'Ticket Cese', fill: palette.error, text: '#ffffff' },
   C7: { id: 'C7', label: 'Estado Entra ID', fill: palette.primary, text: '#ffffff' },
   C8: { id: 'C8', label: 'Escenarios', fill: '#bc5800', text: '#ffffff' },
+  // Perfiles
+  C9: { id: 'C9', label: 'Rol Final', fill: '#8a5a00', text: '#ffffff' },
+  C10: { id: 'C10', label: 'Matriz de Roles', fill: '#3f6212', text: '#ffffff' },
 };

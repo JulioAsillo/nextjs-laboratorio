@@ -2,45 +2,59 @@ import type { ColumnDef } from '@/features/usuarios/hallazgos/aplicaciones/colum
 
 /**
  * Columnas del "Hallazgo de Perfiles". Los `key` coinciden EXACTAMENTE con los
- * campos del JSON (mock hoy; backend real luego). Si el backend cambia un nombre,
- * actualiza el `key` aquí — esta es la única fuente de verdad del módulo.
+ * campos del JSON que devuelve el backend:
  *
- * Grupos de color (lib/theme.ts): C1 Identidad · C2 Dueño · C6 Responsable · C8 Escenarios.
+ *   GET {API_BASE}/hallazgos/profiles -> { data: { reporte_perfiles: [...] } }
+ *
+ * Esta es la ÚNICA fuente de verdad de columnas del módulo. Si el backend cambia
+ * el nombre de un campo (espacios, acentos, mayúsculas), se actualiza el `key` aquí.
+ *
+ * Grupos de color (lib/theme.ts), mismo criterio por ORIGEN del dato que en Usuarios:
+ *   C1  Aplicación / Exactus Perfiles · C2  DNI vs Usuarios · C5  GDH ·
+ *   C3  AD PPS · C4  AD VIDA · C9  Rol Final (calculado) · C10  Matriz de Roles.
  */
 
-export const KEY_ESCENARIO = 'Escenario';
-export const KEY_RESPONSABLE = 'Responsable';
+export const KEY_ROL_FINAL = 'Rol Final';
 
-/** Flags booleanos de escenario (orden = orden de las tarjetas-resumen). */
-export const PERFILES_ESCENARIO_FLAGS = [
-  'Perfil Sin Dueño',
-  'Permisos Excesivos',
-  'Conflicto SoD',
-  'Perfil Inactivo',
-  'Sin Recertificar 365d',
-] as const;
-
-const flagCol = (key: string): ColumnDef => ({ key, header: key, group: 'C8', widthPx: 150, width: 18 });
+/** Validaciones contra la Matriz de Roles (valor "Correcto"/"Incorrecto"). */
+export const PERFILES_VALIDACIONES = ['Rol+App', 'Rol+App+Perfil', 'Rol+Perfil'] as const;
 
 export const perfilesColumns: ColumnDef[] = [
-  // C1 · Identidad del perfil
-  { key: 'Nombre Archivo', header: 'Nombre Archivo', group: 'C1', widthPx: 190, width: 22 },
+  // --- C1 · Aplicación / Exactus Perfiles ---
+  { key: 'Aplicación', header: 'Aplicación', group: 'C1', widthPx: 180, width: 22 },
+  { key: 'Asignación', header: 'Asignación', group: 'C1', widthPx: 150, width: 16 },
+  { key: 'Usuario', header: 'Usuario', group: 'C1', widthPx: 160, width: 18 },
+
+  // --- C2 · DNI vs Usuarios ---
+  { key: 'DNI', header: 'DNI', group: 'C2', widthPx: 130, width: 14 },
+  { key: 'TIPO_dnivsuser', header: 'TIPO_dnivsuser', group: 'C2', widthPx: 160, width: 18 },
+  { key: 'Usuario_dnivsuser', header: 'Usuario_dnivsuser', group: 'C2', widthPx: 180, width: 20 },
+  { key: 'COMENTARIO_dnivsuser', header: 'COMENTARIO_dnivsuser', group: 'C2', widthPx: 260, width: 30 },
+
+  // --- C1 · Aplicación / Exactus Perfiles ---
+  { key: 'Estado', header: 'Estado', group: 'C1', widthPx: 120, width: 14 },
   { key: 'Perfil', header: 'Perfil', group: 'C1', widthPx: 180, width: 20 },
-  { key: 'Sistema', header: 'Sistema', group: 'C1', widthPx: 160, width: 18 },
-  { key: 'Tipo Perfil', header: 'Tipo Perfil', group: 'C1', widthPx: 150, width: 16 },
-  { key: 'Usuarios Asignados', header: 'Usuarios Asignados', group: 'C1', widthPx: 160, width: 18 },
   { key: 'Fecha Creación', header: 'Fecha Creación', group: 'C1', widthPx: 150, width: 16, isDate: true },
-  { key: 'Fecha Ultima Recertificación', header: 'Fecha Última Recertificación', group: 'C1', widthPx: 220, width: 24, isDate: true },
+  { key: 'Fecha Login', header: 'Fecha Login', group: 'C1', widthPx: 150, width: 16, isDate: true },
 
-  // C2 · Dueño del perfil
-  { key: 'DNI Dueño', header: 'DNI Dueño', group: 'C2', widthPx: 130, width: 14 },
-  { key: 'Dueño Perfil', header: 'Dueño Perfil', group: 'C2', widthPx: 190, width: 22 },
+  // --- C5 · GDH ---
+  { key: 'Tipo Colaborador', header: 'Tipo Colaborador', group: 'C5', widthPx: 160, width: 18 },
+  { key: 'Rol GDH', header: 'Rol GDH', group: 'C5', widthPx: 180, width: 20 },
 
-  // C8 · Escenarios
-  { key: 'Escenario', header: 'Escenario', group: 'C8', widthPx: 240, width: 28 },
-  ...PERFILES_ESCENARIO_FLAGS.map(flagCol),
+  // --- C3 · AD PPS ---
+  { key: 'Rol AD PPS', header: 'Rol AD PPS', group: 'C3', widthPx: 180, width: 20 },
 
-  // C6 · Responsable
-  { key: 'Responsable', header: 'Responsable', group: 'C6', widthPx: 170, width: 20 },
-  { key: 'Comentario', header: 'Comentario', group: 'C6', widthPx: 220, width: 26 },
+  // --- C4 · AD VIDA ---
+  { key: 'Rol AD VIDA', header: 'Rol AD VIDA', group: 'C4', widthPx: 180, width: 20 },
+
+  // --- C9 · Rol Final (calculado) ---
+  { key: 'Rol Final', header: 'Rol Final', group: 'C9', widthPx: 180, width: 20 },
+
+  // --- C10 · Matriz de Roles (Correcto / Incorrecto) ---
+  { key: 'Rol+App', header: 'Rol+App', group: 'C10', widthPx: 130, width: 14 },
+  { key: 'Rol+App+Perfil', header: 'Rol+App+Perfil', group: 'C10', widthPx: 150, width: 16 },
+  { key: 'Rol+Perfil', header: 'Rol+Perfil', group: 'C10', widthPx: 130, width: 14 },
 ];
+
+export const totalWidthPx = perfilesColumns.reduce((acc, c) => acc + c.widthPx, 0);
+export const gridTemplate = perfilesColumns.map((c) => `${c.widthPx}px`).join(' ');

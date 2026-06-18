@@ -1,27 +1,40 @@
 import type { HallazgoAplicacion } from '@/types/hallazgo';
+import { PERFILES_VALIDACIONES } from './perfiles-columns';
 
-export interface EscenarioStat {
+export interface ValidacionStat {
   key: string;
   label: string;
-  count: number;
+  /** Filas con resultado "Incorrecto" (los hallazgos a revisar). */
+  incorrectos: number;
 }
 
-const NEGATIVOS = new Set(['', 'no', '0', 'false', 'n', '-', 'null', 'none']);
-
-/** Un flag se cuenta como activo si su valor no es vacío/negativo. */
-export function isFlagOn(value: unknown): boolean {
-  if (value == null) return false;
-  return !NEGATIVOS.has(String(value).trim().toLowerCase());
+export interface PerfilesSummary {
+  total: number;
+  stats: ValidacionStat[];
 }
 
-/** Cuenta cuántas filas tienen activo cada flag de escenario. */
-export function computePerfilesSummary(
-  rows: HallazgoAplicacion[],
-  flags: readonly string[],
-): EscenarioStat[] {
-  return flags.map((key) => ({
-    key,
-    label: key,
-    count: rows.reduce((acc, row) => acc + (isFlagOn(row[key]) ? 1 : 0), 0),
-  }));
+const LABELS: Record<string, string> = {
+  'Rol+App': 'Rol + App',
+  'Rol+App+Perfil': 'Rol + App + Perfil',
+  'Rol+Perfil': 'Rol + Perfil',
+};
+
+const isIncorrecto = (v: unknown): boolean => String(v ?? '').trim().toLowerCase() === 'incorrecto';
+
+/**
+ * Resumen del hallazgo: por cada validación contra la Matriz de Roles
+ * (Rol+App, Rol+App+Perfil, Rol+Perfil) cuenta cuántas filas dan "Incorrecto".
+ *
+ * IMPORTANTE: referencia de módulo estable (no inline) para que el `useMemo`
+ * de HallazgosView funcione bien con datasets grandes.
+ */
+export function computePerfilesSummary(rows: HallazgoAplicacion[]): PerfilesSummary {
+  return {
+    total: rows.length,
+    stats: PERFILES_VALIDACIONES.map((key) => ({
+      key,
+      label: LABELS[key] ?? key,
+      incorrectos: rows.reduce((acc, row) => acc + (isIncorrecto(row[key]) ? 1 : 0), 0),
+    })),
+  };
 }

@@ -4,37 +4,31 @@ import { getJson } from '@/lib/http';
 /**
  * Fetcher del "Hallazgo de Perfiles".
  *
- * Contrato esperado (TBD) — mismo shape que Aplicaciones/BD:
- *   GET {API_BASE}/hallazgos/perfiles?fecha_ref=YYYY-MM-DD
+ * Contrato real del backend:
+ *   GET {API_BASE}/hallazgos/profiles
  *   -> { data: { reporte_perfiles: HallazgoAplicacion[] } }
  *
- * Mientras no exista el backend, se sirve un mock desde /public. Para
- * conmutar a producción: pon USE_MOCK = false (o define el endpoint real).
+ * Se aceptan variantes (array directo, `reporte_perfiles`/`perfiles`/`profiles`)
+ * por robustez, igual que en Aplicaciones (`reporte_apps`).
+ *
+ * NO recibe fecha de referencia: el endpoint no toma query params. Si en el
+ * futuro el backend agrega `?fecha_ref=`, el parámetro `fechaRef` ya está listo
+ * para enviarse (ver más abajo).
  */
-const ENDPOINT = process.env.NEXT_PUBLIC_PERFILES_HALLAZGOS_ENDPOINT ?? '/hallazgos/perfiles';
-const MOCK_URL = '/mock-perfiles-hallazgos.json';
-
-/** Mientras el backend no exista, dejar en true. */
-const USE_MOCK = true;
+const ENDPOINT = process.env.NEXT_PUBLIC_PERFILES_HALLAZGOS_ENDPOINT ?? '/hallazgos/profiles';
 
 function pick(raw: unknown): HallazgoAplicacion[] {
+  if (Array.isArray(raw)) return raw as HallazgoAplicacion[];
   const obj = (raw ?? {}) as Record<string, unknown>;
   const data = (obj.data && typeof obj.data === 'object' ? obj.data : obj) as Record<string, unknown>;
-  for (const k of ['reporte_perfiles', 'perfiles', 'hallazgos']) {
+  for (const k of ['reporte_perfiles', 'perfiles', 'profiles']) {
     if (Array.isArray(data[k])) return data[k] as HallazgoAplicacion[];
   }
   return [];
 }
 
 export async function fetchHallazgosPerfiles(fechaRef?: string): Promise<HallazgoAplicacion[]> {
-  if (USE_MOCK) {
-    const res = await fetch(MOCK_URL, { headers: { Accept: 'application/json' } });
-    if (!res.ok) throw new Error(`No se pudo cargar el mock de Perfiles (${res.status})`);
-    return pick(await res.json());
-  }
-
-  // --- Producción (cuando el backend esté listo) ---
+  // El endpoint actual no usa fecha. Se deja preparado por si el backend la añade.
   const qs = fechaRef ? `?fecha_ref=${encodeURIComponent(fechaRef)}` : '';
-  const raw = await getJson(`${ENDPOINT}${qs}`);
-  return pick(raw);
+  return pick(await getJson(`${ENDPOINT}${qs}`));
 }
