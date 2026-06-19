@@ -1,80 +1,35 @@
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { adColumns } from './ad-columns';
+import { adScenarios } from './resumen-ad/ad-scenarios';
 import { colorGroups } from '@/lib/theme';
 import { writeCell } from '@/lib/excel/cell-format';
 import { styleHeader } from '@/lib/excel/style';
+import {
+  rowsForScenario,
+  countByResponsible,
+  collectComentarios,
+  type ScenarioDef,
+  type ScenarioContext,
+} from '@/lib/resumen/scenario-engine';
+import type { ColumnDef } from '../aplicaciones/columns';
 import type { HallazgoAplicacion } from '@/types/hallazgo';
 
 type Row = HallazgoAplicacion;
 
-export type ScenarioDef = {
-  code: string;
-  title: string;
-  flagKey: string;
-};
+// Re-export para compatibilidad / acceso desde otros módulos si hiciera falta.
+export { rowsForScenario, countByResponsible, classifyResponsible } from '@/lib/resumen/scenario-engine';
+export type { ResponsableTipo } from '@/lib/resumen/scenario-engine';
+export const scenarios = adScenarios;
 
-export const scenarios: ScenarioDef[] = [
-  { code: 'H1_AD', title: 'Colaboradores Cesados con cuenta activa', flagKey: 'Cesado Activo' },
-  { code: 'H2_AD', title: 'Usuarios con acceso posterior al cese del empleado', flagKey: 'Login Post Cese' },
-  { code: 'H3_AD', title: 'Usuarios no identificados o sin sustento', flagKey: 'No Identificado' },
-  { code: 'H4_AD', title: 'Identificación de usuarios sin uso más de 90 días de inactividad', flagKey: 'Sin Uso 90d' },
-  { code: 'H5_AD', title: 'Identificación de usuarios deshabilitados más de 6 meses (AD) que no fueron eliminados', flagKey: 'Deshabilitado 180d' },
-  { code: 'H6_AD', title: 'Usuarios con contraseña que no expire', flagKey: 'Contraseña no Expira' },
-  { code: 'H7_AD', title: 'Usuarios que no pueden cambiar su contraseña', flagKey: 'No Puede Cambiar Contraseña' },
-];
-
-function normalize(value: unknown): string {
-  return String(value ?? '').trim().toUpperCase();
-}
-
-function isPositive(value: unknown): boolean {
-  const v = normalize(value);
-  return !['', 'NO', '0', 'FALSE', 'N', 'NULL', '-', 'N/A'].includes(v);
-}
-
-/**
- * Clasifica el Responsable de forma EXCLUYENTE.
- * "GDH | ACCESOS" / "ACCESOS | GDH" -> AMBOS.
- */
-export type ResponsableTipo = 'GDH' | 'ACCESOS' | 'AMBOS' | 'OTRO';
-
-export function classifyResponsible(value: unknown): ResponsableTipo {
-  const v = normalize(value);
-  const hasGdh = v.includes('GDH');
-  const hasAcc = v.includes('ACCESO');
-  if (hasGdh && hasAcc) return 'AMBOS';
-  if (hasGdh) return 'GDH';
-  if (hasAcc) return 'ACCESOS';
-  return 'OTRO';
-}
-
-export function countByResponsible(rows: Row[], responsible: 'GDH' | 'ACCESOS' | 'AMBOS'): number {
-  return rows.filter(
-    (row) => classifyResponsible((row as Record<string, unknown>).Responsable) === responsible,
-  ).length;
-}
-
-/** Junta los comentarios distintos y no vacíos de un escenario. */
-function collectComentarios(rows: Row[]): string {
-  const seen = new Set<string>();
-  for (const row of rows) {
-    const c = String((row as Record<string, unknown>).Comentario ?? '').trim();
-    if (c) seen.add(c);
-  }
-  return Array.from(seen).join(' | ');
-}
-
-export function rowsForScenario(rows: Row[], scenario: ScenarioDef): Row[] {
-  return rows.filter((row) => isPositive((row as Record<string, unknown>)[scenario.flagKey]));
+export interface ExportResumenAdOptions {
+  /** Mes de ejecución 'YYYY-MM' (mes de la fecha de corte) para H2. */
+  mesEjecucion?: string;
+  fileName?: string;
 }
 
 function styleSummaryCell(cell: ExcelJS.Cell, fill: string, bold = false) {
-  cell.fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: fill },
-  };
+  cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fill } };
   cell.border = {
     top: { style: 'thin', color: { argb: '000000' } },
     left: { style: 'thin', color: { argb: '000000' } },
@@ -96,12 +51,22 @@ function styleDataCell(cell: ExcelJS.Cell) {
   cell.font = { name: 'Calibri', size: 11 };
 }
 
-function buildDetailSheet(workbook: ExcelJS.Workbook, sheetName: string, rows: Row[]) {
-  const sheet = workbook.addWorksheet(sheetName, {
+/** Resuelve las columnas (ColumnDef) que se pintan en un escenario, en el orden de la config. */
+function columnsForScenario(scenario: ScenarioDef): ColumnDef[] {
+  const byKey = new Map(adColumns.map((c) => [c.key, c]));
+  return scenario.columns
+    .map((key) => byKey.get(key))
+    .filter((c): c is ColumnDef => Boolean(c));
+}
+
+function buildDetailSheet(workbook: ExcelJS.Workbook, scenario: ScenarioDef, rows: Row[]) {
+  const cols = columnsForScenario(scenario);
+
+  const sheet = workbook.addWorksheet(scenario.code, {
     views: [{ state: 'frozen', ySplit: 3 }],
   });
 
-  sheet.columns = adColumns.map((c) => ({
+  sheet.columns = cols.map((c) => ({
     key: c.key,
     width: c.widthPx ? Math.max(12, Math.round(c.widthPx / 7)) : 18,
   }));
@@ -113,7 +78,7 @@ function buildDetailSheet(workbook: ExcelJS.Workbook, sheetName: string, rows: R
   back.alignment = { horizontal: 'center', vertical: 'middle' };
 
   const headerRow = sheet.getRow(3);
-  adColumns.forEach((col, idx) => {
+  cols.forEach((col, idx) => {
     const group = colorGroups[col.group];
     const cell = headerRow.getCell(idx + 1);
     cell.value = col.header;
@@ -123,21 +88,24 @@ function buildDetailSheet(workbook: ExcelJS.Workbook, sheetName: string, rows: R
 
   rows.forEach((row) => {
     const excelRow = sheet.addRow([]);
-    adColumns.forEach((col, idx) => {
+    cols.forEach((col, idx) => {
       writeCell(excelRow.getCell(idx + 1), (row as Record<string, unknown>)[col.key], col.isDate);
     });
   });
 
   sheet.autoFilter = {
     from: { row: 3, column: 1 },
-    to: { row: 3, column: adColumns.length },
+    to: { row: 3, column: cols.length },
   };
 }
 
 export async function exportResumenAdExcel(
   rows: Row[],
-  fileName = 'resumen-hallazgos-active-directory.xlsx',
+  options: ExportResumenAdOptions = {},
 ): Promise<void> {
+  const { mesEjecucion, fileName = 'resumen-hallazgos-active-directory.xlsx' } = options;
+  const ctx: ScenarioContext = { mesEjecucion };
+
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'Certificación de Usuarios';
   workbook.created = new Date();
@@ -153,7 +121,7 @@ export async function exportResumenAdExcel(
     { width: 18 }, // D ACCESOS
     { width: 18 }, // E GDH | ACCESOS
     { width: 14 }, // F Hoja
-    { width: 38 }, // G comentario/resumen libre
+    { width: 38 }, // G comentario
   ];
 
   summary.mergeCells('B2:F2');
@@ -180,8 +148,8 @@ export async function exportResumenAdExcel(
   });
 
   let rowIndex = 5;
-  for (const scenario of scenarios) {
-    const scenarioRows = rowsForScenario(rows, scenario);
+  for (const scenario of adScenarios) {
+    const scenarioRows = rowsForScenario(rows, scenario, ctx);
     const total = scenarioRows.length;
     const gdh = countByResponsible(scenarioRows, 'GDH');
     const accesos = countByResponsible(scenarioRows, 'ACCESOS');
@@ -192,24 +160,32 @@ export async function exportResumenAdExcel(
     summary.getCell(`C${rowIndex}`).value = gdh;
     summary.getCell(`D${rowIndex}`).value = accesos;
     summary.getCell(`E${rowIndex}`).value = ambos;
-    summary.getCell(`F${rowIndex}`).value = {
-      text: scenario.code,
-      hyperlink: `#'${scenario.code}'!A1`,
-    };
     summary.getCell(`G${rowIndex}`).value = collectComentarios(scenarioRows);
+
+    // "Si no hay hallazgos no se considera": queda en 0, sin hoja ni hipervínculo.
+    if (total > 0) {
+      summary.getCell(`F${rowIndex}`).value = {
+        text: scenario.code,
+        hyperlink: `#'${scenario.code}'!A1`,
+      };
+      buildDetailSheet(workbook, scenario, scenarioRows);
+    } else {
+      summary.getCell(`F${rowIndex}`).value = scenario.code;
+    }
 
     ['A', 'B', 'C', 'D', 'E', 'F', 'G'].forEach((col) =>
       styleDataCell(summary.getCell(`${col}${rowIndex}`)),
     );
 
-    summary.getCell(`F${rowIndex}`).font = {
-      name: 'Calibri',
-      size: 11,
-      color: { argb: '0563C1' },
-      underline: true,
-    };
+    if (total > 0) {
+      summary.getCell(`F${rowIndex}`).font = {
+        name: 'Calibri',
+        size: 11,
+        color: { argb: '0563C1' },
+        underline: true,
+      };
+    }
 
-    buildDetailSheet(workbook, scenario.code, scenarioRows);
     rowIndex += 1;
   }
 

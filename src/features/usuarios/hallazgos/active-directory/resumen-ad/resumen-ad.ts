@@ -1,38 +1,26 @@
 import type { HallazgoAplicacion } from '@/types/hallazgo';
-import { scenarios, rowsForScenario, countByResponsible } from '../export-resumen-ad';
+import {
+  buildScenarioResumen,
+  type ResumenScenario,
+  type ResumenScenarioRow,
+  type ScenarioContext,
+} from '@/lib/resumen/scenario-engine';
+import { adScenarios } from './ad-scenarios';
 
-export interface ResumenAdRow {
-  code: string;
-  title: string;
-  total: number;
-  gdh: number;
-  accesos: number;
-  ambos: number;
-}
-
-export interface ResumenAd {
-  rows: ResumenAdRow[];
-  totalRows: number;
-  totalHallazgos: number;
-}
+// Se mantienen los nombres ResumenAd* para no romper a los consumidores.
+export type ResumenAdRow = ResumenScenarioRow;
+export type ResumenAd = ResumenScenario;
 
 /**
  * Construye el preview por escenario (H1_AD…H7_AD) a partir del detalle ya con
- * Responsable poblado. Usa exactamente las mismas flags y conteo que el export.
+ * Responsable poblado. Usa exactamente las mismas flags, filtros y conteo que
+ * el export, leyendo la config de `ad-scenarios.ts`.
+ *
+ * `ctx.mesEjecucion` ('YYYY-MM') alimenta el filtro de postcese de H2.
  */
-export function buildResumenAd(rows: HallazgoAplicacion[]): ResumenAd {
-  const out: ResumenAdRow[] = scenarios.map((s) => {
-    const scoped = rowsForScenario(rows, s);
-    return {
-      code: s.code,
-      title: s.title,
-      total: scoped.length,
-      gdh: countByResponsible(scoped, 'GDH'),
-      accesos: countByResponsible(scoped, 'ACCESOS'),
-      ambos: countByResponsible(scoped, 'AMBOS'),
-    };
-  });
-
-  const totalHallazgos = out.reduce((acc, r) => acc + r.total, 0);
-  return { rows: out, totalRows: rows.length, totalHallazgos };
+export function buildResumenAd(
+  rows: HallazgoAplicacion[],
+  ctx: ScenarioContext = {},
+): ResumenAd {
+  return buildScenarioResumen(rows, adScenarios, ctx);
 }
