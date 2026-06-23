@@ -4,7 +4,7 @@ import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { Download, RefreshCw, Loader2, Search, Play, CalendarClock, DatabaseZap } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/Button';
-import { PaginationControls } from './components/PaginationControls';
+import { PaginationControls } from '@/components/PaginationControls';
 import { useTextFilter } from '@/lib/text-filter';
 import { useHallazgoCache } from '@/lib/use-hallazgo-cache';
 import { DataTable } from './components/DataTable';
