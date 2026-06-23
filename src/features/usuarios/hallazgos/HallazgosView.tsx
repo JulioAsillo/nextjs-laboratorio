@@ -4,6 +4,7 @@ import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { Download, RefreshCw, Loader2, Search, Play, CalendarClock, DatabaseZap } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/Button';
+import { PaginationControls } from './components/PaginationControls';
 import { useTextFilter } from '@/lib/text-filter';
 import { useHallazgoCache } from '@/lib/use-hallazgo-cache';
 import { DataTable } from './components/DataTable';
@@ -38,6 +39,8 @@ interface HallazgosViewProps<S> {
    * fetcher como `?fecha_ref=`. Aplica a todos los hallazgos menos Aplicaciones.
    */
   withFechaRef?: boolean;
+  /** Filas por página. Por defecto 50. */
+  pageSize?: number;
 }
 
 /** Selector de fecha de referencia (calendario nativo, estilo corporativo). */
@@ -80,6 +83,7 @@ export function HallazgosView<S>({
   renderSummary,
   onExport,
   withFechaRef = false,
+  pageSize = 50,
 }: HallazgosViewProps<S>) {
   const { data, error, isValidating, mutate } = useHallazgos(swrKey, fetcher);
 
@@ -89,6 +93,19 @@ export function HallazgosView<S>({
 
   const { query, setQuery, deferredQuery, filtered: rows, isFiltering } = useTextFilter(allRows, keys);
   const summary = useMemo(() => summarize(rows), [rows, summarize]);
+
+  // Estado de paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(rows.length / pageSize)), [rows.length, pageSize]);
+  const paginatedRows = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return rows.slice(start, start + pageSize);
+  }, [rows, currentPage, pageSize]);
+
+  // Reset a página 1 cuando cambia el filtro
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [deferredQuery]);
 
   const [fechaRef, setFechaRef] = useState('');
   const [generating, setGenerating] = useState(false);
@@ -242,7 +259,18 @@ export function HallazgosView<S>({
             </p>
           </div>
 
-          <DataTable rows={rows} columns={columns} />
+          <DataTable rows={paginatedRows} columns={columns} />
+
+          {totalPages > 1 && (
+            <div className="flex justify-center py-4">
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                disabled={busy}
+              />
+            </div>
+          )}
         </div>
       )}
     </AppShell>
