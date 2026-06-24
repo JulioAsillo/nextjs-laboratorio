@@ -37,6 +37,14 @@ export const perfilesColumns: ColumnDef[] = [
   { key: 'Fecha Creación', header: 'Fecha Creación', group: 'C1', widthPx: 150, width: 16, isDate: true },
   { key: 'Fecha Login', header: 'Fecha Login', group: 'C1', widthPx: 150, width: 16, isDate: true },
 
+  // --- C7 · Entra ID ---
+  { key: 'Fecha Creación Entra', header: 'Fecha Creación Entra', group: 'C7', widthPx: 180, width: 20, isDate: true },
+  { key: 'Fecha Login Entra', header: 'Fecha Login Entra', group: 'C7', widthPx: 180, width: 20, isDate: true },
+  { key: 'Estado Entra', header: 'Estado Entra', group: 'C7', widthPx: 120, width: 14 },
+  { key: 'FaxNumber Entra', header: 'FaxNumber Entra', group: 'C7', widthPx: 160, width: 18 },
+  { key: 'Rol Entra', header: 'Rol Entra', group: 'C7', widthPx: 160, width: 18 },
+  { key: 'Jefatura Entra', header: 'Jefatura Entra', group: 'C7', widthPx: 180, width: 20 },
+
   // --- C5 · GDH ---
   { key: 'Tipo Colaborador', header: 'Tipo Colaborador', group: 'C5', widthPx: 160, width: 18 },
   { key: 'Rol GDH', header: 'Rol GDH', group: 'C5', widthPx: 180, width: 20 },
@@ -51,9 +59,17 @@ export const perfilesColumns: ColumnDef[] = [
   { key: 'Rol Final', header: 'Rol Final', group: 'C9', widthPx: 180, width: 20 },
 
   // --- C10 · Matriz de Roles (Correcto / Incorrecto) ---
+  { key: 'Rol Existe en MR?', header: 'Rol Existe en MR?', group: 'C10', widthPx: 180, width: 20 },
+  { key: 'Perfil MR(rol+app)', header: 'Perfil MR(rol+app)', group: 'C10', widthPx: 220, width: 30 },
+  { key: 'App MR(rol+perfil)', header: 'App MR(rol+perfil)', group: 'C10', widthPx: 220, width: 30 },
   { key: 'Rol+App', header: 'Rol+App', group: 'C10', widthPx: 130, width: 14 },
-  { key: 'Rol+App+Perfil', header: 'Rol+App+Perfil', group: 'C10', widthPx: 150, width: 16 },
+  { key: 'Rol+App+Perfil', header: 'Rol+App+Perfil', group: 'C10', widthPx: 150, width: 20 },
   { key: 'Rol+Perfil', header: 'Rol+Perfil', group: 'C10', widthPx: 130, width: 14 },
+
+  // --- C8 · Escenarios ---
+  { key: 'Escenario', header: 'Escenario', group: 'C8', widthPx: 180, width: 20 },
+  { key: 'Responsable', header: 'Responsable', group: 'C8', widthPx: 220, width: 30 },
+  { key: 'Comentario', header: 'Comentario', group: 'C8', widthPx: 220, width: 30 },
 ];
 
 export const totalWidthPx = perfilesColumns.reduce((acc, c) => acc + c.widthPx, 0);

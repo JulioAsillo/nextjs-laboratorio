@@ -48,7 +48,7 @@ export const colorGroups: Record<ColorGroupId, ColorGroup> = {
   C4: { id: 'C4', label: 'AD VIDA', fill: palette.inverseSurface, text: '#ffffff' },
   C5: { id: 'C5', label: 'GDH', fill: palette.outline, text: '#ffffff' },
   C6: { id: 'C6', label: 'Ticket Cese', fill: palette.error, text: '#ffffff' },
-  C7: { id: 'C7', label: 'Estado Entra ID', fill: palette.primary, text: '#ffffff' },
+  C7: { id: 'C7', label: 'Estado Entra ID', fill: palette.onSurface, text: '#ffffff' },
   C8: { id: 'C8', label: 'Escenarios', fill: '#bc5800', text: '#ffffff' },
   // Perfiles
   C9: { id: 'C9', label: 'Rol Final', fill: '#8a5a00', text: '#ffffff' },
