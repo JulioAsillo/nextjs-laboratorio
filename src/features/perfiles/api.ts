@@ -29,6 +29,6 @@ function pick(raw: unknown): HallazgoAplicacion[] {
 
 export async function fetchHallazgosPerfiles(fechaRef?: string): Promise<HallazgoAplicacion[]> {
   // El endpoint actual no usa fecha. Se deja preparado por si el backend la añade.
-  const qs = fechaRef ? `?fecha_ref=${encodeURIComponent(fechaRef)}` : '';
-  return pick(await getJson(`${ENDPOINT}${qs}`));
+  //const qs = fechaRef ? `?fecha_ref=${encodeURIComponent(fechaRef)}` : '';
+  return pick(await getJson(`${ENDPOINT}`));
 }

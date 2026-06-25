@@ -285,6 +285,9 @@ function SlotUploader({ slot, fuenteId, showLabel, onUploaded }: SlotUploaderPro
   const errCount      = useMemo(() => files.filter((f) => f.status === 'error').length, [files]);
   const uploadedCount = useMemo(() => files.filter((f) => f.uploadStatus === 'uploaded').length, [files]);
 
+  // Al detectar un archivo con error, abre el detalle para que las columnas faltantes se vean sin clic.
+  useEffect(() => { if (errCount > 0) setShowList(true); }, [errCount]);
+
   const validateFile = useCallback(async (file: File): Promise<FileEntry> => {
     const id   = `${file.name}-${file.size}-${Math.random().toString(36).slice(2)}`;
     const base = { id, file, uploadStatus: 'idle' as UploadStatus };
@@ -462,26 +465,57 @@ function SlotUploader({ slot, fuenteId, showLabel, onUploaded }: SlotUploaderPro
 
           {showList && (
             <ul className="thin-scroll mt-2 max-h-48 space-y-1 overflow-y-auto pr-1">
-              {files.map((f) => (
-                <li key={f.id} className="flex items-center gap-2 rounded-md border border-outline-variant/60 bg-surface-container-lowest px-2 py-1.5">
-                  {f.status === 'validating' && <Loader2 size={14} className="shrink-0 animate-spin text-primary" />}
-                  {f.status === 'ok' && f.uploadStatus !== 'uploading' && f.uploadStatus !== 'uploaded' && <CheckCircle2 size={14} className="shrink-0 text-secondary" />}
-                  {f.uploadStatus === 'uploading' && <Loader2 size={14} className="shrink-0 animate-spin text-primary" />}
-                  {f.uploadStatus === 'uploaded' && <Check size={14} className="shrink-0 text-secondary" />}
-                  {f.status === 'error' && f.uploadStatus !== 'uploading' && <XCircle size={14} className="shrink-0 text-error" />}
-                  <span className="min-w-0 flex-1 truncate text-body-md text-on-surface" title={f.file.name}>{f.file.name}</span>
-                  {f.status === 'error' && (
-                    <span className="shrink-0 max-w-[40%] truncate text-label-caps uppercase text-error"
-                      title={f.error ?? (f.validation?.missing.length ? `Faltan: ${f.validation.missing.join(', ')}` : 'Inválido')}>
-                      {f.validation?.missing.length ? `Faltan ${f.validation.missing.length}` : 'Inválido'}
-                    </span>
-                  )}
-                  {f.uploadStatus !== 'uploaded' && (
-                    <button type="button" onClick={() => setFiles((p) => p.filter((e) => e.id !== f.id))}
-                      className="shrink-0 text-on-surface-variant hover:text-error" aria-label="Quitar"><X size={14} /></button>
-                  )}
-                </li>
-              ))}
+              {files.map((f) => {
+                const missing = f.validation?.missing ?? [];
+                const extra   = f.validation?.extra ?? [];
+                const isError = f.status === 'error';
+                return (
+                  <li key={f.id} className="rounded-md border border-outline-variant/60 bg-surface-container-lowest px-2 py-1.5">
+                    <div className="flex items-center gap-2">
+                      {f.status === 'validating' && <Loader2 size={14} className="shrink-0 animate-spin text-primary" />}
+                      {f.status === 'ok' && f.uploadStatus !== 'uploading' && f.uploadStatus !== 'uploaded' && <CheckCircle2 size={14} className="shrink-0 text-secondary" />}
+                      {f.uploadStatus === 'uploading' && <Loader2 size={14} className="shrink-0 animate-spin text-primary" />}
+                      {f.uploadStatus === 'uploaded' && <Check size={14} className="shrink-0 text-secondary" />}
+                      {isError && f.uploadStatus !== 'uploading' && <XCircle size={14} className="shrink-0 text-error" />}
+                      <span className="min-w-0 flex-1 truncate text-body-md text-on-surface" title={f.file.name}>{f.file.name}</span>
+                      {isError && (
+                        <span className="shrink-0 text-label-caps uppercase text-error">
+                          {missing.length ? `Faltan ${missing.length}` : 'Inválido'}
+                        </span>
+                      )}
+                      {f.uploadStatus !== 'uploaded' && (
+                        <button type="button" onClick={() => setFiles((p) => p.filter((e) => e.id !== f.id))}
+                          className="shrink-0 text-on-surface-variant hover:text-error" aria-label="Quitar"><X size={14} /></button>
+                      )}
+                    </div>
+
+                    {/* Error de formato/lectura: mensaje plano (no hay validación de columnas). */}
+                    {isError && !missing.length && f.error && (
+                      <p className="mt-1.5 border-t border-outline-variant/50 pt-1.5 text-body-md text-error">{f.error}</p>
+                    )}
+
+                    {/* Columnas obligatorias ausentes: visibles como chips, sin hover. */}
+                    {isError && missing.length > 0 && (
+                      <div className="mt-1.5 border-t border-outline-variant/50 pt-1.5">
+                        <p className="mb-1 text-label-caps uppercase text-error">Columnas faltantes</p>
+                        <div className="flex flex-wrap gap-1">
+                          {missing.map((c) => (
+                            <span key={c}
+                              className="inline-flex items-center rounded border border-error/30 bg-error/10 px-1.5 py-0.5 text-[11px] font-medium leading-tight text-error">
+                              {c}
+                            </span>
+                          ))}
+                        </div>
+                        {extra.length > 0 && (
+                          <p className="mt-1.5 text-[11px] leading-snug text-on-surface-variant">
+                            No reconocidas en el archivo: {extra.join(', ')}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
 

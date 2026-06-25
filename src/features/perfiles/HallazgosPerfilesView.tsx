@@ -22,7 +22,11 @@ export function HallazgosPerfilesView() {
       title="Hallazgo de Perfiles"
       breadcrumb={['Certificación de Perfiles', 'Hallazgo de Perfiles']}
       swrKey={PERFILES_SWR_KEYS.hallazgoPerfiles}
-      fetcher={fetchHallazgosPerfiles}
+      // SWR pasa la `key` como argumento al fetcher; la envolvemos para que NUNCA
+      // llegue a `fetchHallazgosPerfiles` como fechaRef. El backend recibe solo
+      // GET /hallazgos/profiles (sin query). El parámetro queda listo en api.ts
+      // por si el backend agrega `?fecha_ref=` más adelante.
+      fetcher={() => fetchHallazgosPerfiles()}
       columns={perfilesColumns}
       endpointHint="/hallazgos/profiles"
       summarize={computePerfilesSummary}
