@@ -3,18 +3,19 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useSWRConfig } from 'swr';
 import clsx from 'clsx';
-import { Loader2, DownloadCloud, CheckCircle2, Trash2, X, AlertTriangle } from 'lucide-react';
+import { Loader2, DownloadCloud, CheckCircle2, Trash2, X, AlertTriangle, UploadCloud } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/Button';
 import { FuenteCard, type LoadStatus } from '@/features/usuarios/cargar/components/FuenteCard';
-import { FuentesCargadasPanel } from '@/features/usuarios/cargar/components/FuentesCargadasPanel';
+import { FuentesCargadasPanel, type PanelMode, type FuenteSubida } from '@/features/usuarios/cargar/components/FuentesCargadasPanel';
 import { DatosModal } from '@/features/usuarios/cargar/components/DatosModal';
 import { fetchDatosApp, type DatosResult } from '@/features/usuarios/cargar/datos';
 import { datosKey } from '@/features/usuarios/cargar/keys';
 import { purgeAll } from '@/features/usuarios/cargar/delete-fuente';
-import { clearAllUploads as lsClearAll } from '@/features/usuarios/cargar/upload-status';
+import { clearAllUploads as lsClearAll, isSlotUploaded } from '@/features/usuarios/cargar/upload-status';
 import { useFocusCard } from '@/lib/use-focus-card';
 import { useCargarCache } from '@/lib/use-cargar-cache';
+import { useBulkUpload } from '@/lib/bulk-upload';
 import { idbDel } from '@/lib/idb-cache';
 import { fuentes } from './fuentes';
 
@@ -41,6 +42,10 @@ export default function CargarPerfilesView() {
   const [modal,      setModal]      = useState<ModalState | null>(null);
   const [resetTick,  setResetTick]  = useState(0);
   const [purge,      setPurge]      = useState<PurgeState>({ confirming: false, running: false, result: null });
+  const [panelMode,  setPanelMode]  = useState<PanelMode>('subidas');
+  const [uploadTick, setUploadTick] = useState(0);
+
+  const upload = useBulkUpload();
 
   useCargarCache<LoadStatus>(CACHE_KEY, loaded, status, setLoaded, setStatus);
 
@@ -122,6 +127,20 @@ export default function CargarPerfilesView() {
     [status, labelByKey],
   );
 
+  const subidas = useMemo<FuenteSubida[]>(() => {
+    return fuentes.flatMap((f) => {
+      const uploaded = f.slots.filter((s) => isSlotUploaded(f.id, s.fileName)).length;
+      return uploaded > 0 ? [{ id: f.id, label: f.label, uploaded, total: f.slots.length, appsKey: f.appsKey }] : [];
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uploadTick]);
+
+  const handleUploadAll = useCallback(async () => {
+    setPanelMode('subidas');
+    await upload.run();
+    setUploadTick((t) => t + 1);
+  }, [upload]);
+
   const allDone = appsKeys.length > 0 && cargadas.length === appsKeys.length;
 
   return (
@@ -132,7 +151,7 @@ export default function CargarPerfilesView() {
         <>
           <span className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-body-md ${allDone ? 'bg-secondary/10 text-secondary' : 'bg-surface-container text-on-surface-variant'}`}>
             {allDone && <CheckCircle2 size={14} />}
-            {bulk.active ? `Cargando ${bulk.done} / ${bulk.total}…` : `${cargadas.length} / ${appsKeys.length} fuentes cargadas`}
+            {bulk.active ? `Explorando ${bulk.done} / ${bulk.total}…` : `${cargadas.length} / ${appsKeys.length} consultadas`}
           </span>
 
           {purge.confirming ? (
@@ -153,8 +172,17 @@ export default function CargarPerfilesView() {
               <Button variant="ghost" icon={<Trash2 size={16} />} onClick={() => setPurge((p) => ({ ...p, confirming: true, result: null }))}>
                 Eliminar todo
               </Button>
-              <Button icon={bulk.active ? <Loader2 size={16} className="animate-spin" /> : <DownloadCloud size={16} />} onClick={handleLoadAll} disabled={bulk.active}>
-                Cargar Todos
+              <Button variant="ghost" icon={bulk.active ? <Loader2 size={16} className="animate-spin" /> : <DownloadCloud size={16} />} onClick={() => { setPanelMode('consultadas'); handleLoadAll(); }} disabled={bulk.active}>
+                Explorar datos cargados
+              </Button>
+              <Button
+                icon={upload.running ? <Loader2 size={16} className="animate-spin" /> : <UploadCloud size={16} />}
+                onClick={handleUploadAll}
+                disabled={upload.running || upload.pending === 0}
+              >
+                {upload.running
+                  ? `Subiendo ${upload.progress.done} / ${upload.progress.total}…`
+                  : `Subir todos los archivos${upload.pending ? ` (${upload.pending})` : ''}`}
               </Button>
             </>
           )}
@@ -184,8 +212,9 @@ export default function CargarPerfilesView() {
                       loadingData={f.appsKey ? loadingKey === f.appsKey : false}
                       status={f.appsKey ? status[f.appsKey] : undefined}
                       resetSignal={resetTick}
-                      onLoadOne={f.appsKey ? () => loadOne(f.appsKey!) : undefined}
+                      onLoadOne={f.appsKey ? () => { setPanelMode('consultadas'); loadOne(f.appsKey!); } : undefined}
                       onDeleted={f.appsKey ? () => clearOne(f.appsKey!) : undefined}
+                      onUploaded={() => { setUploadTick((t) => t + 1); setPanelMode('subidas'); }}
                       onView={f.appsKey && (loaded[f.appsKey] ?? 0) > 0 ? () => setModal({ appsKey: f.appsKey!, title: f.label }) : undefined}
                     />
                     </div>
@@ -196,7 +225,17 @@ export default function CargarPerfilesView() {
           })}
         </div>
 
-        <FuentesCargadasPanel cargadas={cargadas} errores={errores} total={appsKeys.length} onView={(appsKey, label) => setModal({ appsKey, title: label })} />
+        <FuentesCargadasPanel
+          mode={panelMode}
+          onModeChange={setPanelMode}
+          subidas={subidas}
+          totalSubibles={fuentes.length}
+          cargadas={cargadas}
+          errores={errores}
+          totalConsultables={appsKeys.length}
+          onView={(appsKey, label) => setModal({ appsKey, title: label })}
+          onExplore={(appsKey) => { setPanelMode('consultadas'); loadOne(appsKey); }}
+        />
       </div>
 
       {modal && <DatosModal appsKey={modal.appsKey} title={modal.title} onClose={() => setModal(null)} />}

@@ -15,6 +15,7 @@ import { uploadFuente } from '../upload-fuente';
 import { mergeFilesToXlsx } from '../merge-fuente';
 import { markUploaded, isSlotUploaded, clearFuente } from '../upload-status';
 import { deleteFuente } from '../delete-fuente';
+import { registerUploader, unregisterUploader } from '@/lib/bulk-upload';
 import { Button } from '@/components/ui/Button';
 
 const nf = new Intl.NumberFormat('es-PE');
@@ -30,10 +31,12 @@ interface FuenteCardProps {
   onView?:      () => void;
   onLoadOne?:   () => void;
   onDeleted?:   () => void;
+  /** Se dispara cuando algún slot de esta card sube archivos al backend. */
+  onUploaded?:  () => void;
 }
 
 export function FuenteCard({
-  fuente, loadedCount, loadingData, status, resetSignal, onView, onLoadOne, onDeleted,
+  fuente, loadedCount, loadingData, status, resetSignal, onView, onLoadOne, onDeleted, onUploaded,
 }: FuenteCardProps) {
   const multiSlot = fuente.slots.length > 1;
   const hasData   = (loadedCount ?? -1) >= 0;
@@ -101,7 +104,7 @@ export function FuenteCard({
             slot={slot}
             fuenteId={fuente.id}
             showLabel={multiSlot}
-            onUploaded={recompute}
+            onUploaded={() => { recompute(); onUploaded?.(); }}
           />
         ))}
       </div>
@@ -287,6 +290,20 @@ function SlotUploader({ slot, fuenteId, showLabel, onUploaded }: SlotUploaderPro
 
   // Al detectar un archivo con error, abre el detalle para que las columnas faltantes se vean sin clic.
   useEffect(() => { if (errCount > 0) setShowList(true); }, [errCount]);
+
+  // Mantiene una referencia viva a handleUpload para el botón global "Subir todos".
+  const runRef = useRef<() => Promise<void>>(async () => {});
+  useEffect(() => { runRef.current = handleUpload; });
+
+  // Registra este slot en el lote global mientras tenga archivos válidos pendientes.
+  useEffect(() => {
+    const id = `${fuenteId}::${slot.fileName}`;
+    if (pendientes.length > 0 && !uploading) {
+      return registerUploader(id, { run: () => runRef.current(), pending: pendientes.length });
+    }
+    unregisterUploader(id);
+    return undefined;
+  }, [pendientes.length, uploading, fuenteId, slot.fileName]);
 
   const validateFile = useCallback(async (file: File): Promise<FileEntry> => {
     const id   = `${file.name}-${file.size}-${Math.random().toString(36).slice(2)}`;

@@ -235,7 +235,7 @@ export function HallazgosView<S>({
               <DatabaseZap size={15} className="shrink-0 text-primary" />
               <span>
                 Datos en caché del {dtf.format(cache.meta.savedAt)}
-                {cache.meta.fechaRef ? ` · fecha ref ${cache.meta.fechaRef}` : ''}. Pulsa{' '}
+                {cache.meta.fechaRef ? ` · fecha ref ${cache.meta.fechaRef}` : ''}. Si quieres actualizar los datos, pulsa{' '}
                 <strong className="font-semibold text-on-surface">Actualizar</strong> para refrescar.
               </span>
             </div>
