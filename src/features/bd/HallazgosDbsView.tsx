@@ -7,6 +7,7 @@ import { Download, Loader2, Search, Play, Database, Server, CalendarClock, Datab
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/Button';
 import { DataTable } from '@/features/usuarios/hallazgos/components/DataTable';
+import { PaginationControls } from '@/components/PaginationControls';
 import { useTextFilter } from '@/lib/text-filter';
 import { useHallazgoCache } from '@/lib/use-hallazgo-cache';
 import type { ColumnDef } from '@/features/usuarios/hallazgos/aplicaciones/columns';
@@ -21,6 +22,9 @@ import { BdSummaryCards } from './components/BdSummaryCards';
 const nf = new Intl.NumberFormat('es-PE');
 const dtf = new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 const ENDPOINT_HINT = '/hallazgos/dbs';
+
+/** Filas por página dentro de cada pestaña (mismo valor que el view genérico). */
+const PAGE_SIZE = 50;
 
 type TabId = 'vida' | 'generales';
 
@@ -73,6 +77,18 @@ function TabPanel({
   const { query, setQuery, deferredQuery, filtered, isFiltering } = useTextFilter(rows, keys);
   const stats = useMemo(() => computeBdSummary(filtered, flags), [filtered, flags]);
 
+  // Paginación local de la pestaña.
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)), [filtered.length]);
+  const pagedRows = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, currentPage]);
+
+  // Vuelve a la página 1 cuando cambia el filtro; clampa si el total se reduce.
+  useEffect(() => { setCurrentPage(1); }, [deferredQuery]);
+  useEffect(() => { setCurrentPage((p) => Math.min(p, totalPages)); }, [totalPages]);
+
   return (
     <div className="flex flex-col gap-4">
       <BdSummaryCards stats={stats} total={filtered.length} />
@@ -94,7 +110,17 @@ function TabPanel({
         </p>
       </div>
 
-      <DataTable rows={filtered} columns={columns} />
+      <DataTable rows={pagedRows} columns={columns} />
+
+      {totalPages > 1 && (
+        <div className="flex justify-center py-2">
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      )}
     </div>
   );
 }
