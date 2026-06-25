@@ -111,4 +111,8 @@ export const fuentes: Fuente[] = [
       { fileName: 'cesados_gdh', label: 'Cesados GDH', columns: ['NÚMERO ID', 'NOMBRES', 'APELLIDO PATERNO', 'APELLIDO MATERNO', 'GRUPO DE PERSONAL', 'FUNCIÓN', 'UNIDAD ORGANIZATIVA', 'FECHA'] },
     ],
   },
+  {
+    id: 'entra-id', label: 'Entra ID', group: 'Otros Reportes', appsKey: 'entraid',
+    slots: [{ fileName: 'entra_id', columns: ['ID', 'SIGNINACTIVITY', 'USERPRINCIPALNAME', 'MAIL', 'ACCOUNTENABLED', 'CREATEDDATETIME', 'FAXNUMBER', 'POSTALCODE', 'STREETADDRESS' ] }],
+  }
 ];
