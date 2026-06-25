@@ -7,7 +7,7 @@ import { Loader2, DownloadCloud, CheckCircle2, Trash2, X, AlertTriangle, UploadC
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/Button';
 import { FuenteCard, type LoadStatus } from './components/FuenteCard';
-import { FuentesCargadasPanel, type PanelMode, type FuenteSubida } from './components/FuentesCargadasPanel';
+import { FuentesCargadasPanel, type PanelMode } from './components/FuentesCargadasPanel';
 import { DatosModal } from './components/DatosModal';
 import { fuentes } from './fuentes';
 import { fetchDatosApp, type DatosResult } from './datos';
@@ -16,7 +16,7 @@ import { purgeAll } from './delete-fuente';
 import { clearAllUploads as lsClearAll, isSlotUploaded } from './upload-status';
 import { useFocusCard } from '@/lib/use-focus-card';
 import { useCargarCache } from '@/lib/use-cargar-cache';
-import { useBulkUpload } from '@/lib/bulk-upload';
+import { useBulkUpload, useUploadedFuentes } from '@/lib/bulk-upload';
 import { idbDel } from '@/lib/idb-cache';
 
 const CACHE_KEY = 'cargar:usuarios';
@@ -127,13 +127,7 @@ export default function CargarInformacionPage() {
   );
 
   // Fuentes con archivos subidos al backend (estado local de subida). Se recalcula al subir.
-  const subidas = useMemo<FuenteSubida[]>(() => {
-    return fuentes.flatMap((f) => {
-      const uploaded = f.slots.filter((s) => isSlotUploaded(f.id, s.fileName)).length;
-      return uploaded > 0 ? [{ id: f.id, label: f.label, uploaded, total: f.slots.length, appsKey: f.appsKey }] : [];
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uploadTick]);
+  const subidas = useUploadedFuentes(fuentes, isSlotUploaded, uploadTick);
 
   const handleUploadAll = useCallback(async () => {
     setPanelMode('subidas');

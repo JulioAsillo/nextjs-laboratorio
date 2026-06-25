@@ -6,7 +6,7 @@ import clsx from 'clsx';
 import { Loader2, DownloadCloud, CheckCircle2, Trash2, X, AlertTriangle, UploadCloud } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/Button';
-import { FuentesCargadasPanel, type PanelMode, type FuenteSubida } from '@/features/usuarios/cargar/components/FuentesCargadasPanel';
+import { FuentesCargadasPanel, type PanelMode } from '@/features/usuarios/cargar/components/FuentesCargadasPanel';
 import { FuenteCardBd, type LoadStatus } from './FuenteCardBd';
 import { DatosModalBd } from './DatosModalBd';
 import { bdFuentes, BD_GROUPS } from './fuentes';
@@ -15,7 +15,7 @@ import { purgeAllBd, clearAllUploadsBd, isSlotUploadedBd } from './upload';
 import type { DatosResult } from '@/features/usuarios/cargar/datos';
 import { useFocusCard } from '@/lib/use-focus-card';
 import { useCargarCache } from '@/lib/use-cargar-cache';
-import { useBulkUpload } from '@/lib/bulk-upload';
+import { useBulkUpload, useUploadedFuentes } from '@/lib/bulk-upload';
 import { idbDel } from '@/lib/idb-cache';
 
 const CACHE_KEY = 'cargar:bd';
@@ -130,13 +130,7 @@ export default function CargarBdView() {
     [status, labelByKey],
   );
 
-  const subidas = useMemo<FuenteSubida[]>(() => {
-    return bdFuentes.flatMap((f) => {
-      const uploaded = f.slots.filter((sl) => isSlotUploadedBd(f.id, sl.fileName)).length;
-      return uploaded > 0 ? [{ id: f.id, label: f.label, uploaded, total: f.slots.length, appsKey: f.appsKey }] : [];
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uploadTick]);
+  const subidas = useUploadedFuentes(bdFuentes, isSlotUploadedBd, uploadTick);
 
   const handleUploadAll = useCallback(async () => {
     setPanelMode('subidas');

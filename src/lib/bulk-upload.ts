@@ -11,7 +11,7 @@
  * todos los `run` en secuencia, sin prop-drilling ni refs entre vistas. Funciona
  * igual para `FuenteCard` y `FuenteCardBd` porque ambos importan este módulo.
  */
-import { useCallback, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
 interface Uploader {
   run: () => Promise<void>;
@@ -96,4 +96,38 @@ export function useBulkUpload(): BulkUploadState {
   }, []);
 
   return { pending, running, progress, run };
+}
+
+/* ── Fuentes con archivos subidos (estado local de subida) ──────────
+ * Lee `localStorage` SOLO tras el montaje para evitar mismatch de hidratación
+ * (el servidor no tiene localStorage → 0; el cliente sí → N). Compartido por
+ * todas las certificaciones; cada una pasa su propio predicado `isUploaded`.
+ */
+interface SlotLike { fileName: string }
+interface FuenteLike { id: string; label: string; appsKey?: string; slots: readonly SlotLike[] }
+
+export interface FuenteSubidaInfo {
+  id: string;
+  label: string;
+  uploaded: number;
+  total: number;
+  appsKey?: string;
+}
+
+export function useUploadedFuentes(
+  fuentes: readonly FuenteLike[],
+  isUploaded: (fuenteId: string, fileName: string) => boolean,
+  tick: number,
+): FuenteSubidaInfo[] {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  return useMemo<FuenteSubidaInfo[]>(() => {
+    if (!mounted) return []; // 1er render (cliente) == servidor
+    return fuentes.flatMap((f) => {
+      const uploaded = f.slots.filter((s) => isUploaded(f.id, s.fileName)).length;
+      return uploaded > 0 ? [{ id: f.id, label: f.label, uploaded, total: f.slots.length, appsKey: f.appsKey }] : [];
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted, tick]);
 }

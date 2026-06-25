@@ -7,7 +7,7 @@ import { Loader2, DownloadCloud, CheckCircle2, Trash2, X, AlertTriangle, UploadC
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/Button';
 import { FuenteCard, type LoadStatus } from '@/features/usuarios/cargar/components/FuenteCard';
-import { FuentesCargadasPanel, type PanelMode, type FuenteSubida } from '@/features/usuarios/cargar/components/FuentesCargadasPanel';
+import { FuentesCargadasPanel, type PanelMode } from '@/features/usuarios/cargar/components/FuentesCargadasPanel';
 import { DatosModal } from '@/features/usuarios/cargar/components/DatosModal';
 import { fetchDatosApp, type DatosResult } from '@/features/usuarios/cargar/datos';
 import { datosKey } from '@/features/usuarios/cargar/keys';
@@ -15,7 +15,7 @@ import { purgeAll } from '@/features/usuarios/cargar/delete-fuente';
 import { clearAllUploads as lsClearAll, isSlotUploaded } from '@/features/usuarios/cargar/upload-status';
 import { useFocusCard } from '@/lib/use-focus-card';
 import { useCargarCache } from '@/lib/use-cargar-cache';
-import { useBulkUpload } from '@/lib/bulk-upload';
+import { useBulkUpload, useUploadedFuentes } from '@/lib/bulk-upload';
 import { idbDel } from '@/lib/idb-cache';
 import { fuentes } from './fuentes';
 
@@ -127,13 +127,7 @@ export default function CargarPerfilesView() {
     [status, labelByKey],
   );
 
-  const subidas = useMemo<FuenteSubida[]>(() => {
-    return fuentes.flatMap((f) => {
-      const uploaded = f.slots.filter((s) => isSlotUploaded(f.id, s.fileName)).length;
-      return uploaded > 0 ? [{ id: f.id, label: f.label, uploaded, total: f.slots.length, appsKey: f.appsKey }] : [];
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uploadTick]);
+  const subidas = useUploadedFuentes(fuentes, isSlotUploaded, uploadTick);
 
   const handleUploadAll = useCallback(async () => {
     setPanelMode('subidas');

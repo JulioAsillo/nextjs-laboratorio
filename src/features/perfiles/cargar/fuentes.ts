@@ -96,6 +96,13 @@ export const fuentes: Fuente[] = [
     ],
   },
   {
+    id: 'gdh', label: 'GDH', group: 'Otros Reportes', appsKey: 'gdh',
+    slots: [
+      { fileName: 'activos_gdh', label: 'Activos GDH', columns: ['NÚMERO ID', 'NOMBRES', 'APELLIDO PATERNO', 'APELLIDO MATERNO', 'GRUPO DE PERSONAL', 'CÓDIGO FUNCIÓN', 'FUNCIÓN', 'CÓDIGO DE UN.ORG.', 'UNIDAD ORGANIZATIVA', 'FECHA'] },
+      { fileName: 'cesados_gdh', label: 'Cesados GDH', columns: ['NÚMERO ID', 'NOMBRES', 'APELLIDO PATERNO', 'APELLIDO MATERNO', 'GRUPO DE PERSONAL', 'FUNCIÓN', 'UNIDAD ORGANIZATIVA', 'FECHA'] },
+    ],
+  },
+  {
     // Carga NUEVA, exclusiva de Perfiles.
     id: 'matriz-roles', label: 'Matriz de Roles', group: 'Otros Reportes', appsKey: 'matriz_roles',
     slots: [{ fileName: 'matriz_roles', columns: ['ROL', 'PERFIL ROL DEL ACTIVO', 'NOMBRE DEL ACTIVO', 'TIPO DE ROL', 'CODIGO FUNCION', 'FUNCION', 'CODIGO UO', 'UNIDAD ORGANIZATIVA', 'TIPO DE ACTIVO', 'DESCRIPCION', 'TICKET', 'MODIFIED', 'CREATED'] }],
@@ -103,13 +110,6 @@ export const fuentes: Fuente[] = [
   {
     id: 'dni-vs-usuarios', label: 'DNI vs Usuarios', group: 'Otros Reportes', appsKey: 'dnivsuser',
     slots: [{ fileName: 'dni_vs_usuarios', columns: ['USERNAME', 'TIPO', 'USUARIO', 'DNI', 'COMENTARIO'] }],
-  },
-  {
-    id: 'gdh', label: 'GDH', group: 'Otros Reportes', appsKey: 'gdh',
-    slots: [
-      { fileName: 'activos_gdh', label: 'Activos GDH', columns: ['NÚMERO ID', 'NOMBRES', 'APELLIDO PATERNO', 'APELLIDO MATERNO', 'GRUPO DE PERSONAL', 'CÓDIGO FUNCIÓN', 'FUNCIÓN', 'CÓDIGO DE UN.ORG.', 'UNIDAD ORGANIZATIVA', 'FECHA'] },
-      { fileName: 'cesados_gdh', label: 'Cesados GDH', columns: ['NÚMERO ID', 'NOMBRES', 'APELLIDO PATERNO', 'APELLIDO MATERNO', 'GRUPO DE PERSONAL', 'FUNCIÓN', 'UNIDAD ORGANIZATIVA', 'FECHA'] },
-    ],
   },
   {
     id: 'entra-id', label: 'Entra ID', group: 'Otros Reportes', appsKey: 'entraid',
