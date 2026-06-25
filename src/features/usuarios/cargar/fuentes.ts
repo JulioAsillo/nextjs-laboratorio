@@ -132,6 +132,10 @@ export const fuentes: Fuente[] = [
     id: 'ssa', label: 'SSA', group: 'Aplicaciones', appsKey: 'ssa',
     slots: [{ fileName: 'usuarios_ssa', columns: ['CODUSRPPS', 'CODCOLABORADOR', 'NOMUSRPPS', 'MAIL', 'STSUSRPPS'] }],
   },
+  {
+    id: 'app_login', label: 'App Login', group: 'Aplicaciones', appsKey: 'app_login',
+    slots: [{ fileName: 'app_login', columns: ['IDUSUARIO', 'NOMBRE_APLICACION', 'ULTIMOLOGEO'] }],
+  },
   // ---------- Otros Reportes ----------
   {
     id: 'ad', label: 'Active Directory', group: 'Otros Reportes', appsKey: 'ad',
