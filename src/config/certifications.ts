@@ -109,6 +109,27 @@ export function firstHref(items: NavItem[]): string | undefined {
   return undefined;
 }
 
+/**
+ * Cadena de items de navegación (de raíz a hoja) cuyo subárbol coincide con el
+ * pathname. Recorre primero los hijos para que gane la coincidencia más
+ * profunda (la hoja real), y luego el href propio del nodo.
+ *
+ * Ej.: en /certificacion-usuarios/hallazgos/active-directory/generar-resumen
+ * devuelve [Hallazgos, Active Directory, Generar Resumen].
+ */
+export function activeTrail(items: NavItem[], pathname: string): NavItem[] {
+  for (const item of items) {
+    if (item.children?.length) {
+      const childTrail = activeTrail(item.children, pathname);
+      if (childTrail.length) return [item, ...childTrail];
+    }
+    if (item.href && (pathname === item.href || pathname.startsWith( `${item.href}/`))) {
+      return [item];
+    }
+  }
+  return [];
+}
+
 /** Ruta de entrada de una certificación (su primera vista con href). */
 export function landingHref(cert: Certification): string {
   return firstHref(cert.nav) ?? cert.basePath;

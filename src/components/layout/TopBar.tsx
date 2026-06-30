@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import { Check, ChevronDown, ChevronsUpDown, LayoutGrid, Search } from 'lucide-react';
 import type { NavItem } from '@/config/navigation';
-import { certifications, activeCertification, landingHref } from '@/config/certifications';
+import { certifications, activeCertification, activeTrail, landingHref } from '@/config/certifications';
 import { CommandPalette } from './CommandPalette';
 
 /** ¿El pathname cae dentro de este nodo o de alguno de sus descendientes? */
@@ -143,6 +143,12 @@ function MenuButton({ item }: { item: NavItem }) {
   const isActive = subtreeContains(item, pathname);
   const hasChildren = !!item.children?.length;
 
+  // Sub-ruta activa dentro de este menú: todos los segmentos más profundos que
+  // el propio botón (p.ej. ["Active Directory", "Generar Resumen"]). Da el
+  // contexto específico para desambiguar hojas con el mismo nombre.
+  const trail = activeTrail([item], pathname);
+  const subPath = trail.slice(1);
+
   // Hoja directa (href sin hijos): enlace simple, sin desplegable.
   if (!hasChildren && item.href) {
     return (
@@ -170,14 +176,24 @@ function MenuButton({ item }: { item: NavItem }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={clsx(
-          'flex items-center gap-2 rounded-md px-3 py-2 text-body-md font-medium transition',
+          'flex min-w-0 max-w-[34rem] items-center gap-2 rounded-md px-3 py-2 text-body-md font-medium transition',
           isActive || open
             ? 'bg-white/[0.12] text-inverse-on-surface'
             : 'text-inverse-on-surface/75 hover:bg-white/[0.08] hover:text-inverse-on-surface',
         )}
       >
         {Icon && <Icon size={16} className="shrink-0 opacity-80" />}
-        {item.label}
+        <span className="shrink-0">{item.label}</span>
+        {subPath.length > 0 && (
+          <>
+            <span aria-hidden className="shrink-0 text-inverse-on-surface/35">
+              /
+            </span>
+            <span className="truncate font-normal text-inverse-on-surface/70">
+              {subPath.map((s) => s.label).join(' / ')}
+            </span>
+          </>
+        )}
         <ChevronDown size={14} className={clsx('shrink-0 transition-transform', open && 'rotate-180')} />
       </button>
 

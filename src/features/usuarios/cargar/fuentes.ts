@@ -61,7 +61,7 @@ export const fuentes: Fuente[] = [
     slots: [{ fileName: 'usuarios_botmaker', columns: ['EMAIL', 'ROLE', 'ACTIVE', 'REGISTRATION_DATE', 'LAST_LOGIN_DATE'] }],
   },
   {
-    id: 'cgweb', label: 'Cgweb', group: 'Aplicaciones', appsKey: 'cgweb',
+    id: 'cgweb', label: 'Carta de Garantía Web', group: 'Aplicaciones', appsKey: 'cgweb',
     slots: [{ fileName: 'usuarios_cgweb', columns: ['CODUSRPPS', 'CODAPLIC', 'CODCOLABORADOR', 'NOMUSRPPS', 'NUMDOC', 'CODPERFIL', 'STSUSRPPSAPLIC', 'STSUSRPPS', 'TIPOUSRPPS', 'FECHACREA', 'FECACCESO'] }],
   },
   {
@@ -101,7 +101,7 @@ export const fuentes: Fuente[] = [
     slots: [{ fileName: 'usuarios_pms', columns: ['LOGIN_SISTEMA', 'EMPRESA_LOGIN', 'DESCRIPCION_LOGIN', 'CODIGO_IDENTIDAD', 'PRIVILEGIO', 'PERFIL', 'ESTADO', 'LOGIN_WINDOWS', 'ACTIVO_BLOQUEADO', 'FECHA_EXPIRACION'] }],
   },
   {
-    id: 'policycenter', label: 'Policycenter', group: 'Aplicaciones', appsKey: 'policycenter',
+    id: 'policycenter', label: 'Policy Center', group: 'Aplicaciones', appsKey: 'policycenter',
     slots: [{ fileName: 'usuarios_policycenter', columns: ['USERNAME', 'ROLENAME', 'NAME', 'LASTNAME', 'SECONDLASTNAME', 'ROLEDESCRIPTION', 'FECHA_CREACION', 'ESTADO'] }],
   },
   {
