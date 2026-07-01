@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import { withTimestamp } from '@/lib/excel/filename';
 import type { Resumen, ResumenRow } from './resumen';
 import { matchesH1, matchesH2 } from './resumen';
 import { h1Columns, h2Columns, KEY_ESCENARIO, type ColumnDef } from '../columns';
@@ -137,6 +138,6 @@ export async function exportResumenExcel(
     new Blob([buf], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     }),
-    fileName,
+    withTimestamp(fileName),
   );
 }

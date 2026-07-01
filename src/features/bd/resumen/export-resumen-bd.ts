@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import { withTimestamp } from '@/lib/excel/filename';
 import { bdVidaColumns, bdGeneralesColumns } from '../bd-columns';
 import { colorGroups } from '@/lib/theme';
 import { writeCell } from '@/lib/excel/cell-format';
@@ -326,6 +327,6 @@ export async function exportResumenBdExcel(
     new Blob([buffer], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     }),
-    fileName,
+    withTimestamp(fileName),
   );
 }

@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import { withTimestamp } from '@/lib/excel/filename';
 import { adColumns } from './ad-columns';
 import { colorGroups } from '@/lib/theme';
 import { writeCell } from '@/lib/excel/cell-format';
@@ -46,6 +47,6 @@ export async function exportAdToExcel(
     new Blob([buffer], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     }),
-    fileName,
+    withTimestamp(fileName),
   );
 }

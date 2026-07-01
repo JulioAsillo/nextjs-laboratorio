@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import { withTimestamp } from '@/lib/excel/filename';
 import { colorGroups } from '@/lib/theme';
 import { writeCell } from '@/lib/excel/cell-format';
 import { styleHeader } from '@/lib/excel/style';
@@ -56,6 +57,6 @@ export async function exportBdDbsToExcel(
     new Blob([buffer], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     }),
-    fileName,
+    withTimestamp(fileName),
   );
 }

@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import { withTimestamp } from '@/lib/excel/filename';
 import { adColumns } from './ad-columns';
 import { adScenarios } from './resumen-ad/ad-scenarios';
 import { colorGroups } from '@/lib/theme';
@@ -194,6 +195,6 @@ export async function exportResumenAdExcel(
     new Blob([buffer], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     }),
-    fileName,
+    withTimestamp(fileName),
   );
 }
