@@ -16,7 +16,12 @@ function build(
   if (y < 100) y += 2000;             // año de 2 dígitos -> 20xx
   if (y < 1900 || y > 2100) return null;
   if (mo < 1 || mo > 12 || d < 1 || d > 31 || h > 23 || mi > 59 || se > 59) return null;
-  const date = new Date(y, mo - 1, d, h, mi, se);
+  // Se construye en UTC (no en hora local) a propósito: ExcelJS convierte el
+  // Date a serial de Excel usando su epoch UTC. Si se creara en hora local
+  // (Lima −5), la celda quedaría corrida +5h (13:45 -> 18:45) o incluso un día.
+  // Usar Date.UTC hace que el "wall clock" parseado sea EXACTAMENTE lo que
+  // Excel/el backend leen.
+  const date = new Date(Date.UTC(y, mo - 1, d, h, mi, se));
   if (Number.isNaN(date.getTime())) return null;
   const hasTime = timeFound && !(h === 0 && mi === 0 && se === 0);
   return { date, hasTime };
@@ -40,7 +45,13 @@ export function parseDate(value: unknown): ParsedDate | null {
   // Último recurso: parser nativo (formatos con nombre de mes, etc.).
   const native = new Date(s);
   if (!Number.isNaN(native.getTime())) {
-    return { date: native, hasTime: /\d{1,2}:\d{2}/.test(s) };
+    // Se re-normaliza a UTC tomando los componentes de "pared" (ver build()):
+    // así el valor mostrado no se corre por la zona horaria local.
+    const date = new Date(Date.UTC(
+      native.getFullYear(), native.getMonth(), native.getDate(),
+      native.getHours(), native.getMinutes(), native.getSeconds(),
+    ));
+    return { date, hasTime: /\d{1,2}:\d{2}/.test(s) };
   }
 
   return null;
