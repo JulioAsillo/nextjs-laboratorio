@@ -54,6 +54,7 @@ const flagCol = (key: string): ColumnDef => ({ key, header: key, group: 'C8', wi
 const BLOQUE_RESPONSABLE: ColumnDef[] = [
   { key: 'Responsable', header: 'Responsable', group: 'C6', widthPx: 150, width: 20 },
   { key: 'Comentario', header: 'Comentario', group: 'C6', widthPx: 200, width: 24 },
+  { key: 'Observación', header: 'Observación', group: 'C6', widthPx: 200, width: 24 },
 ];
 
 /* ── Hoja VIDA ─────────────────────────────────────────────────────── */
@@ -105,4 +106,5 @@ export const bdGeneralesColumns: ColumnDef[] = [
   flagCol(ESCENARIO_FLAG_GENERALES),
 
   ...BLOQUE_RESPONSABLE,
+  
 ];
