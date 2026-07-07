@@ -98,7 +98,7 @@ export const fuentes: Fuente[] = [
   {
     id: 'gdh', label: 'GDH', group: 'Otros Reportes', appsKey: 'gdh',
     slots: [
-      { fileName: 'activos_gdh', label: 'Activos GDH', columns: ['NÚMERO ID', 'NOMBRES', 'APELLIDO PATERNO', 'APELLIDO MATERNO', 'GRUPO DE PERSONAL', 'CÓDIGO FUNCIÓN', 'FUNCIÓN', 'CÓDIGO DE UN.ORG.', 'UNIDAD ORGANIZATIVA', 'FECHA', 'SOCIEDAD', 'ÁREA DE NÓMINA', 'ÁREA BCP', 'DIVISIÓN BCP'] },
+      { fileName: 'activos_gdh', label: 'Activos GDH', columns: ['NÚMERO ID', 'NOMBRES', 'APELLIDO PATERNO', 'APELLIDO MATERNO', 'GRUPO DE PERSONAL', 'CÓDIGO FUNCIÓN', 'FUNCIÓN', 'CÓDIGO DE UN.ORG.', 'UNIDAD ORGANIZATIVA', 'FECHA', 'SOCIEDAD', 'ÁREA DE NÓMINA', 'AREA BCP', 'DIVISIÓN BCP'] },
       { fileName: 'cesados_gdh', label: 'Cesados GDH', columns: ['NÚMERO ID', 'NOMBRES', 'APELLIDO PATERNO', 'APELLIDO MATERNO', 'GRUPO DE PERSONAL', 'FUNCIÓN', 'UNIDAD ORGANIZATIVA', 'FECHA', 'SOCIEDAD'] },
     ],
   },
