@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { ShieldCheck, Database, FileSearch, FileSpreadsheet, Upload, UsersIcon } from 'lucide-react';
+import { ShieldCheck, Database, FileSearch, FileSpreadsheet, Upload, UsersIcon, AppWindow, Network } from 'lucide-react';
 import { navigation, type NavItem } from './navigation';
 
 /**
@@ -52,16 +52,27 @@ const bdNav: NavItem[] = [
 
 const perfilesNav: NavItem[] = [
   {
-    label: 'Hallazgo de Perfiles',
-    href: '/certificacion-perfiles/hallazgos',
+    label: 'Hallazgos',
     icon: FileSearch,
-    children:[
+    children: [
       {
-        label: 'Generar Resumen',
-        href: '/certificacion-perfiles/hallazgos/generar-resumen',
-        icon: FileSpreadsheet,
+        label: 'Hallazgo de Perfiles',
+        href: '/certificacion-perfiles/hallazgos/perfiles',
+        icon: AppWindow,
+        children: [
+          {
+            label: 'Generar Resumen',
+            href: '/certificacion-perfiles/hallazgos/perfiles/generar-resumen',
+            icon: FileSpreadsheet,
+          },
+        ],
       },
-    ], 
+      {
+        label: 'Activos GDH',
+        href: '/certificacion-perfiles/hallazgos/activos-gdh',
+        icon: Network,
+      },
+    ],
   },
   {
     label: 'Cargar Información',
