@@ -13,7 +13,7 @@ import { getJson } from '@/lib/http';
  * robustez, igual que Perfiles/Aplicaciones. No recibe query params.
  */
 const ENDPOINT =
-  process.env.NEXT_PUBLIC_PERFILES_ACTIVOS_GDH_ENDPOINT ?? '/hallazgos/activos-gdh';
+  process.env.NEXT_PUBLIC_PERFILES_ACTIVOS_GDH_ENDPOINT ?? '/hallazgos/activos_gdh';
 
 function pick(raw: unknown): HallazgoAplicacion[] {
   if (Array.isArray(raw)) return raw as HallazgoAplicacion[];
