@@ -36,6 +36,7 @@ export const activosGdhColumns: ColumnDef[] = [
   // --- C5 · GDH (rol) ---
   { key: 'tipo rol', header: 'Tipo Rol', group: 'C5', widthPx: 150, width: 16 },
   { key: 'rol gdh', header: 'Rol GDH', group: 'C5', widthPx: 180, width: 20 },
+  { key: 'jefe gdh', header: 'Jefe GDH', group: 'C5', widthPx: 180, width: 20 },
 
   // --- C10 · Matriz de Roles ---
   { key: 'existe en mr', header: 'Existe en MR', group: 'C10', widthPx: 140, width: 16 },
@@ -44,11 +45,12 @@ export const activosGdhColumns: ColumnDef[] = [
   { key: 'username pps', header: 'Username PPS', group: 'C3', widthPx: 170, width: 18 },
   { key: 'rol pps', header: 'Rol PPS', group: 'C3', widthPx: 170, width: 18 },
   { key: 'dni pps', header: 'DNI PPS', group: 'C3', widthPx: 130, width: 14 },
-
+  { key: 'jefe pps', header: 'Jefe PPS', group: 'C3', widthPx: 180, width: 20 },
   // --- C4 · AD VIDA ---
   { key: 'username vida', header: 'Username VIDA', group: 'C4', widthPx: 170, width: 18 },
   { key: 'rol vida', header: 'Rol VIDA', group: 'C4', widthPx: 170, width: 18 },
   { key: 'dni vida', header: 'DNI VIDA', group: 'C4', widthPx: 130, width: 14 },
+  { key: 'jefe vida', header: 'Jefe VIDA', group: 'C4', widthPx: 180, width: 20 },
 
   // --- C10 · Matriz de Roles (validaciones, se muestran tal cual) ---
   { key: 'validacion rol', header: 'Validación Rol', group: 'C10', widthPx: 200, width: 24 },
