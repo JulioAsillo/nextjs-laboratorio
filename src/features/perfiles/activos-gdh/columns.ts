@@ -37,7 +37,7 @@ export const activosGdhColumns: ColumnDef[] = [
   { key: 'tipo rol', header: 'Tipo Rol', group: 'C5', widthPx: 150, width: 16 },
   { key: 'rol gdh', header: 'Rol GDH', group: 'C5', widthPx: 180, width: 20 },
   { key: 'jefe gdh', header: 'Jefe GDH', group: 'C5', widthPx: 180, width: 20 },
-
+  { key: 'jefe entra', header: 'Jefe Entra', group: 'C5', widthPx: 180, width: 20 },
   // --- C10 · Matriz de Roles ---
   { key: 'existe en mr', header: 'Existe en MR', group: 'C10', widthPx: 140, width: 16 },
 
