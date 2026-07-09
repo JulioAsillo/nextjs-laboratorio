@@ -1,21 +1,19 @@
 import type { HallazgoAplicacion } from '@/types/hallazgo';
 
 /**
- * Cálculo del "RESUMEN" (2da hoja) del hallazgo Activos GDH.
+ * Cálculo del "RESUMEN" (2da hoja) y de los subconjuntos de detalle del
+ * hallazgo Activos GDH. Los conteos del resumen y las hojas de detalle usan las
+ * MISMAS reglas de filtrado (una sola fuente de verdad: `findingRowsFor`).
  *
- * Dos tipos de tabla:
+ * Reporte GDH (Planilla / FFVV), por Sociedad:
+ *   - Roles    = DISTINCT de 'rol gdh' (no vacío).
+ *   - Usuarios = filas con 'dni' no vacío.
+ *   - Hallazgo = 'validacion rol' NO en blanco.
  *
- * 1) Reporte GDH (para Tipo Rol = Planilla y FFVV), por Sociedad:
- *      - Roles    = conteo DISTINCT de 'rol gdh' (no vacío) en el subconjunto.
- *      - Usuarios = filas con 'dni' no vacío en el subconjunto.
- *    Y "# Hallazgos inicial" = lo mismo pero solo sobre filas donde
- *    'validacion rol' NO está en blanco. "% Hallazgos inicial" = hallazgos/reporte.
- *
- * 2) Proveedores (Tipo Rol = Proveedor), por Sociedad:
- *      - Cuenta de dni    = filas con 'dni' no vacío.
- *      - No existen en AD = filas donde 'username pps' Y 'username vida' son
- *                           ambos "*No existe en AD*" (match tolerante).
- *      - % No existen     = noExistenAd / cuentaDni.
+ * Proveedores (Tipo Rol = Proveedor), por Sociedad:
+ *   - Cuenta de dni    = filas con 'dni' no vacío.
+ *   - Hallazgo (No existe en AD) = 'username pps' Y 'username vida' ambos
+ *                                  "*No existe en AD*".
  */
 
 export const TIPO_ROL = {
@@ -41,6 +39,26 @@ const hasValue = (v: unknown): boolean => String(v ?? '').trim() !== '';
 /** "*No existe en AD*" y variantes; match tolerante por contenido. */
 const isNoExisteAd = (v: unknown): boolean => norm(v).includes('no existe en ad');
 
+const esProveedor = (tipoRol: string): boolean => norm(tipoRol) === norm(TIPO_ROL.proveedor);
+
+/**
+ * Filas que son HALLAZGO en un escenario (Tipo Rol + Sociedad).
+ * - Proveedor: PPS y VIDA ambos "No existe en AD".
+ * - Resto (Planilla/FFVV): 'validacion rol' no en blanco.
+ */
+export function findingRowsFor(
+  rows: HallazgoAplicacion[],
+  tipoRol: string,
+  sociedad: string,
+): HallazgoAplicacion[] {
+  const inScope = rows.filter(
+    (r) => norm(r[K_TIPO_ROL]) === norm(tipoRol) && norm(r[K_SOCIEDAD]) === norm(sociedad),
+  );
+  return esProveedor(tipoRol)
+    ? inScope.filter((r) => isNoExisteAd(r[K_USER_PPS]) && isNoExisteAd(r[K_USER_VIDA]))
+    : inScope.filter((r) => hasValue(r[K_VALIDACION_ROL]));
+}
+
 export interface RolUsuario {
   roles: number;
   usuarios: number;
@@ -51,6 +69,7 @@ export interface ReporteSociedad {
   hallazgos: RolUsuario; // # Hallazgos inicial
 }
 export interface ReporteGdhTable {
+  tipoRol: string; // 'Planilla' | 'FFVV'
   titulo: string; // 'PLANILLA' | 'FFVV'
   sociedades: ReporteSociedad[];
 }
@@ -64,7 +83,7 @@ export interface ActivosGdhResumen {
   proveedores: ProveedorSociedad[];
 }
 
-/** DISTINCT de 'rol gdh' (no vacío, sin distinguir espacios sobrantes). */
+/** DISTINCT de 'rol gdh' (no vacío). */
 function distinctRoles(rows: HallazgoAplicacion[]): number {
   const set = new Set<string>();
   for (const r of rows) {
@@ -84,17 +103,18 @@ function reporteGdhTable(
   tipoRol: string,
   titulo: string,
 ): ReporteGdhTable {
-  const delTipo = rows.filter((r) => norm(r[K_TIPO_ROL]) === norm(tipoRol));
   const sociedades: ReporteSociedad[] = SOCIEDADES.map((soc) => {
-    const sub = delTipo.filter((r) => norm(r[K_SOCIEDAD]) === norm(soc));
-    const conHallazgo = sub.filter((r) => hasValue(r[K_VALIDACION_ROL]));
+    const sub = rows.filter(
+      (r) => norm(r[K_TIPO_ROL]) === norm(tipoRol) && norm(r[K_SOCIEDAD]) === norm(soc),
+    );
+    const conHallazgo = findingRowsFor(rows, tipoRol, soc);
     return {
       sociedad: soc,
       reporte: { roles: distinctRoles(sub), usuarios: countConDni(sub) },
       hallazgos: { roles: distinctRoles(conHallazgo), usuarios: countConDni(conHallazgo) },
     };
   });
-  return { titulo, sociedades };
+  return { tipoRol, titulo, sociedades };
 }
 
 export function buildActivosGdhResumen(rows: HallazgoAplicacion[]): ActivosGdhResumen {
@@ -103,14 +123,15 @@ export function buildActivosGdhResumen(rows: HallazgoAplicacion[]): ActivosGdhRe
     reporteGdhTable(rows, TIPO_ROL.ffvv, 'FFVV'),
   ];
 
-  const proveedorRows = rows.filter((r) => norm(r[K_TIPO_ROL]) === norm(TIPO_ROL.proveedor));
   const proveedores: ProveedorSociedad[] = SOCIEDADES.map((soc) => {
-    const sub = proveedorRows.filter((r) => norm(r[K_SOCIEDAD]) === norm(soc));
-    const noExistenAd = sub.reduce(
-      (acc, r) => acc + (isNoExisteAd(r[K_USER_PPS]) && isNoExisteAd(r[K_USER_VIDA]) ? 1 : 0),
-      0,
+    const sub = rows.filter(
+      (r) => esProveedor(String(r[K_TIPO_ROL])) && norm(r[K_SOCIEDAD]) === norm(soc),
     );
-    return { sociedad: soc, cuentaDni: countConDni(sub), noExistenAd };
+    return {
+      sociedad: soc,
+      cuentaDni: countConDni(sub),
+      noExistenAd: findingRowsFor(rows, TIPO_ROL.proveedor, soc).length,
+    };
   });
 
   return { reporteGdh, proveedores };

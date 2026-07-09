@@ -9,31 +9,132 @@ import type { HallazgoAplicacion } from '@/types/hallazgo';
 import { activosGdhColumns } from './columns';
 import {
   buildActivosGdhResumen,
+  findingRowsFor,
+  TIPO_ROL,
+  SOCIEDADES,
   type ActivosGdhResumen,
   type ReporteGdhTable,
 } from './resumen';
 
-/* ─────────────────────────── hoja RESUMEN ───────────────────────────
- * Layout con margen: columna A y fila 1 vacías; las tablas arrancan en B2.
- *   B      = columna de etiquetas
- *   C..F   = datos (Reporte GDH: 2 sociedades × Roles/Usuarios)
- *   C..D   = datos (Proveedores: 2 sociedades)
+const norm = (v: unknown): string => String(v ?? '').trim().toLowerCase();
+
+/* ═══════════════════════════ hojas de DETALLE por escenario ═══════════════════════════ */
+
+/** Columnas extra (vacías, para llenar manualmente) al final de cada hoja de detalle. */
+const EXTRA_COLS = [
+  { key: 'accion_correctiva', header: 'Acción Correctiva', width: 30 },
+  { key: 'comentario_detalle', header: 'Comentario', width: 30 },
+];
+
+interface Detalle {
+  tipoRol: string;
+  label: string; // Planilla | FFVV | Proveedores
+  sociedad: string;
+  sheetName: string;
+  rows: HallazgoAplicacion[];
+}
+
+/** Código corto de sociedad para el nombre de hoja (Excel: máx 31 chars). */
+function socShort(soc: string): string {
+  const n = norm(soc);
+  if (n.includes('eps')) return 'SA EPS';
+  if (n.includes('cia') || n.includes('reaseg')) return 'CIA SEG';
+  return soc.slice(0, 12);
+}
+
+/** Sanitiza y recorta un nombre de hoja a las reglas de Excel. */
+function sanitizeSheetName(name: string): string {
+  const s = name.replace(/[:\\/?*[\]]/g, ' ').replace(/\s+/g, ' ').trim();
+  return s.length > 31 ? s.slice(0, 31).trim() : s;
+}
+
+/** Hipervínculo interno a otra hoja (nombre entre comillas por si tiene espacios). */
+function internalLink(sheetName: string): string {
+  return `#'${sheetName.replace(/'/g, "''")}'!A1`;
+}
+
+/** Escenarios (Tipo Rol × Sociedad) que tienen al menos un hallazgo -> una hoja c/u. */
+function buildDetalles(rows: HallazgoAplicacion[]): Detalle[] {
+  const defs = [
+    { tipoRol: TIPO_ROL.planilla, label: 'Planilla' },
+    { tipoRol: TIPO_ROL.ffvv, label: 'FFVV' },
+    { tipoRol: TIPO_ROL.proveedor, label: 'Proveedores' },
+  ];
+  const out: Detalle[] = [];
+  const used = new Set<string>();
+  for (const d of defs) {
+    for (const soc of SOCIEDADES) {
+      const fr = findingRowsFor(rows, d.tipoRol, soc);
+      if (!fr.length) continue; // sin hallazgos -> sin hoja
+      let name = sanitizeSheetName(`${d.label} - ${socShort(soc)}`);
+      let i = 2;
+      while (used.has(name.toLowerCase())) name = sanitizeSheetName(`${d.label} ${socShort(soc)} ${i++}`);
+      used.add(name.toLowerCase());
+      out.push({ tipoRol: d.tipoRol, label: d.label, sociedad: soc, sheetName: name, rows: fr });
+    }
+  }
+  return out;
+}
+
+/** Escribe una hoja de detalle: 17 columnas del hallazgo + Acción Correctiva + Comentario. */
+function writeDetalleSheet(workbook: ExcelJS.Workbook, det: Detalle): void {
+  const dataCols: ColumnDef[] = activosGdhColumns;
+  const sheet = workbook.addWorksheet(det.sheetName, { views: [{ state: 'frozen', ySplit: 1 }] });
+  sheet.columns = [
+    ...dataCols.map((c) => ({ key: c.key, width: c.width ?? 18 })),
+    ...EXTRA_COLS.map((c) => ({ key: c.key, width: c.width })),
+  ];
+
+  const headerRow = sheet.getRow(1);
+  dataCols.forEach((col, idx) => {
+    const g = colorGroups[col.group];
+    const cell = headerRow.getCell(idx + 1);
+    cell.value = col.header;
+    styleHeader(cell, g.fill, g.text);
+  });
+  const accion = colorGroups.C8; // Escenarios (naranja) para columnas de acción
+  EXTRA_COLS.forEach((col, i) => {
+    const cell = headerRow.getCell(dataCols.length + 1 + i);
+    cell.value = col.header;
+    styleHeader(cell, accion.fill, accion.text);
+  });
+  headerRow.height = 30;
+
+  det.rows.forEach((row) => {
+    const excelRow = sheet.addRow([]);
+    dataCols.forEach((col, idx) => {
+      writeCell(excelRow.getCell(idx + 1), row[col.key], col.isDate);
+    });
+    // Acción Correctiva / Comentario quedan vacías para llenar a mano.
+    for (let i = 0; i < EXTRA_COLS.length; i++) {
+      excelRow.getCell(dataCols.length + 1 + i).value = null;
+    }
+  });
+
+  sheet.autoFilter = {
+    from: { row: 1, column: 1 },
+    to: { row: 1, column: dataCols.length + EXTRA_COLS.length },
+  };
+}
+
+/* ═══════════════════════════ hoja RESUMEN ═══════════════════════════
+ * Margen: A y fila 1 vacías; tablas desde B2. B=etiquetas, C..F=datos.
+ * Cada sociedad enlaza a su hoja de detalle (si existe) vía hipervínculo interno.
  */
 
-const MARGIN_COL = 1; // A
-const LABEL_COL = 2; // B
-const START_ROW = 2; // -> B2
+const MARGIN_COL = 1;
+const START_ROW = 2;
 
-// Paleta corporativa (Corporate Minimalist).
-const TITLE_FILL = '#283044'; // banda de título de sección (inverse-surface)
-const HEADER_FILL = colorGroups.C1.fill; // "Reporte GDH" (azul primario)
-const HEADER_TEXT = colorGroups.C1.text; // blanco
-const SUB_FILL = '#D9E1F2'; // sub-cabeceras (sociedad / Roles-Usuarios)
-const LABEL_FILL = '#EEF1FF'; // columna de etiquetas
-const VALUE_FILL = '#FFFFFF'; // valores "Reporte GDH" / "Cuenta de dni"
-const FINDING_FILL = '#FFF2CC'; // resalte de hallazgos (ámbar suave)
-const PCT_FILL = '#F2F5FB'; // filas de porcentaje
-const BORDER = '#BDC8D0'; // outline-variant
+const TITLE_FILL = '#283044';
+const HEADER_FILL = colorGroups.C1.fill;
+const HEADER_TEXT = colorGroups.C1.text;
+const SUB_FILL = '#D9E1F2';
+const LABEL_FILL = '#EEF1FF';
+const VALUE_FILL = '#FFFFFF';
+const FINDING_FILL = '#FFF2CC';
+const PCT_FILL = '#F2F5FB';
+const BORDER = '#BDC8D0';
+const LINK_TEXT = '#0F4C81';
 
 type Fmt = {
   bold?: boolean;
@@ -44,7 +145,7 @@ type Fmt = {
   size?: number;
 };
 
-function border(cell: ExcelJS.Cell): void {
+function applyBorder(cell: ExcelJS.Cell): void {
   const b = { style: 'thin' as const, color: { argb: argb(BORDER) } };
   cell.border = { top: b, left: b, bottom: b, right: b };
 }
@@ -59,66 +160,70 @@ function style(cell: ExcelJS.Cell, fmt: Fmt): void {
   if (fmt.fill) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: argb(fmt.fill) } };
   cell.alignment = { vertical: 'middle', horizontal: fmt.align ?? 'center' };
   if (fmt.numFmt) cell.numFmt = fmt.numFmt;
-  border(cell);
+  applyBorder(cell);
 }
 
-/** Escribe una celda simple. */
 function put(sheet: ExcelJS.Worksheet, r: number, c: number, value: ExcelJS.CellValue, fmt: Fmt = {}): void {
   const cell = sheet.getCell(r, c);
-  cell.value = value;
   style(cell, fmt);
+  cell.value = value;
 }
 
-/** Combina un rango horizontal y lo estiliza en todas sus celdas (bordes limpios). */
+/** Combina un rango horizontal, lo estiliza, y opcionalmente lo vuelve hipervínculo. */
 function mergePut(
   sheet: ExcelJS.Worksheet,
   r: number,
   c1: number,
   c2: number,
-  value: ExcelJS.CellValue,
+  value: string,
   fmt: Fmt = {},
+  linkSheet?: string,
 ): void {
   sheet.mergeCells(r, c1, r, c2);
   for (let c = c1; c <= c2; c++) style(sheet.getCell(r, c), fmt);
-  sheet.getCell(r, c1).value = value;
+  const anchor = sheet.getCell(r, c1);
+  if (linkSheet) {
+    anchor.value = { text: value, hyperlink: internalLink(linkSheet) };
+    anchor.font = { name: 'Inter', size: fmt.size ?? 11, bold: true, underline: true, color: { argb: argb(LINK_TEXT) } };
+  } else {
+    anchor.value = value;
+  }
 }
 
 const pct = (n: number, d: number): number => (d > 0 ? n / d : 0);
 
-/**
- * Tabla "Reporte GDH" (Planilla / FFVV). 5 columnas visibles: B etiquetas,
- * C/D sociedad1, E/F sociedad2. Devuelve la siguiente fila libre.
- */
-function writeReporteGdh(sheet: ExcelJS.Worksheet, table: ReporteGdhTable, top: number): number {
+type SheetFor = (tipoRol: string, sociedad: string) => string | undefined;
+
+function writeReporteGdh(
+  sheet: ExcelJS.Worksheet,
+  table: ReporteGdhTable,
+  top: number,
+  sheetFor: SheetFor,
+): number {
   const [s1, s2] = table.sociedades;
   const [B, C, D, E, F] = [2, 3, 4, 5, 6];
   let r = top;
 
-  // Banda de título de sección.
   mergePut(sheet, r, B, F, table.titulo.toUpperCase(), {
     bold: true, fill: TITLE_FILL, textColor: '#ffffff', align: 'left', size: 12,
   });
   sheet.getRow(r).height = 22;
   r += 1;
 
-  // "Reporte GDH" (merge C:F).
   mergePut(sheet, r, C, F, 'Reporte GDH', { bold: true, fill: HEADER_FILL, textColor: HEADER_TEXT });
   sheet.getRow(r).height = 18;
   r += 1;
 
-  // Sociedades.
-  mergePut(sheet, r, C, D, s1.sociedad, { bold: true, fill: SUB_FILL });
-  mergePut(sheet, r, E, F, s2.sociedad, { bold: true, fill: SUB_FILL });
+  mergePut(sheet, r, C, D, s1.sociedad, { bold: true, fill: SUB_FILL }, sheetFor(table.tipoRol, s1.sociedad));
+  mergePut(sheet, r, E, F, s2.sociedad, { bold: true, fill: SUB_FILL }, sheetFor(table.tipoRol, s2.sociedad));
   r += 1;
 
-  // Roles / Usuarios.
   put(sheet, r, C, 'Roles', { bold: true, fill: SUB_FILL });
   put(sheet, r, D, 'Usuarios', { bold: true, fill: SUB_FILL });
   put(sheet, r, E, 'Roles', { bold: true, fill: SUB_FILL });
   put(sheet, r, F, 'Usuarios', { bold: true, fill: SUB_FILL });
   r += 1;
 
-  // Reporte GDH (valores).
   put(sheet, r, B, 'Reporte GDH', { bold: true, align: 'left', fill: LABEL_FILL });
   put(sheet, r, C, s1.reporte.roles, { fill: VALUE_FILL });
   put(sheet, r, D, s1.reporte.usuarios, { fill: VALUE_FILL });
@@ -126,7 +231,6 @@ function writeReporteGdh(sheet: ExcelJS.Worksheet, table: ReporteGdhTable, top: 
   put(sheet, r, F, s2.reporte.usuarios, { fill: VALUE_FILL });
   r += 1;
 
-  // # Hallazgos inicial (resaltado).
   put(sheet, r, B, '# Hallazgos inicial', { bold: true, align: 'left', fill: LABEL_FILL });
   put(sheet, r, C, s1.hallazgos.roles, { fill: FINDING_FILL });
   put(sheet, r, D, s1.hallazgos.usuarios, { fill: FINDING_FILL });
@@ -134,19 +238,22 @@ function writeReporteGdh(sheet: ExcelJS.Worksheet, table: ReporteGdhTable, top: 
   put(sheet, r, F, s2.hallazgos.usuarios, { fill: FINDING_FILL });
   r += 1;
 
-  // % Hallazgos inicial.
   put(sheet, r, B, '% Hallazgos inicial', { bold: true, align: 'left', fill: LABEL_FILL });
   put(sheet, r, C, pct(s1.hallazgos.roles, s1.reporte.roles), { fill: PCT_FILL, bold: true, numFmt: '0%' });
   put(sheet, r, D, pct(s1.hallazgos.usuarios, s1.reporte.usuarios), { fill: PCT_FILL, bold: true, numFmt: '0%' });
   put(sheet, r, E, pct(s2.hallazgos.roles, s2.reporte.roles), { fill: PCT_FILL, bold: true, numFmt: '0%' });
   put(sheet, r, F, pct(s2.hallazgos.usuarios, s2.reporte.usuarios), { fill: PCT_FILL, bold: true, numFmt: '0%' });
-  r += 2; // separación
+  r += 2;
 
   return r;
 }
 
-/** Tabla de Proveedores (B etiquetas, C/D sociedades). */
-function writeProveedores(sheet: ExcelJS.Worksheet, resumen: ActivosGdhResumen, top: number): number {
+function writeProveedores(
+  sheet: ExcelJS.Worksheet,
+  resumen: ActivosGdhResumen,
+  top: number,
+  sheetFor: SheetFor,
+): number {
   const [p1, p2] = resumen.proveedores;
   const [B, C, D] = [2, 3, 4];
   let r = top;
@@ -158,8 +265,8 @@ function writeProveedores(sheet: ExcelJS.Worksheet, resumen: ActivosGdhResumen, 
   r += 1;
 
   put(sheet, r, B, '', { fill: SUB_FILL });
-  put(sheet, r, C, p1.sociedad, { bold: true, fill: SUB_FILL });
-  put(sheet, r, D, p2.sociedad, { bold: true, fill: SUB_FILL });
+  mergePut(sheet, r, C, C, p1.sociedad, { bold: true, fill: SUB_FILL }, sheetFor(TIPO_ROL.proveedor, p1.sociedad));
+  mergePut(sheet, r, D, D, p2.sociedad, { bold: true, fill: SUB_FILL }, sheetFor(TIPO_ROL.proveedor, p2.sociedad));
   r += 1;
 
   put(sheet, r, B, 'Cuenta de dni', { bold: true, align: 'left', fill: LABEL_FILL });
@@ -180,27 +287,28 @@ function writeProveedores(sheet: ExcelJS.Worksheet, resumen: ActivosGdhResumen, 
   return r;
 }
 
-function addResumenSheet(workbook: ExcelJS.Workbook, rows: HallazgoAplicacion[]): void {
+function addResumenSheet(workbook: ExcelJS.Workbook, rows: HallazgoAplicacion[], sheetFor: SheetFor): void {
   const resumen = buildActivosGdhResumen(rows);
   const sheet = workbook.addWorksheet('RESUMEN', { views: [{ showGridLines: false }] });
 
-  // Margen izquierdo (A) + anchos.
   sheet.getColumn(MARGIN_COL).width = 3;
-  sheet.getColumn(LABEL_COL).width = 24;
+  sheet.getColumn(2).width = 24;
   for (let c = 3; c <= 6; c++) sheet.getColumn(c).width = 17;
-  sheet.getRow(1).height = 8; // margen superior
+  sheet.getRow(1).height = 8;
 
   let r = START_ROW;
-  for (const table of resumen.reporteGdh) r = writeReporteGdh(sheet, table, r);
-  writeProveedores(sheet, resumen, r);
+  for (const table of resumen.reporteGdh) r = writeReporteGdh(sheet, table, r, sheetFor);
+  writeProveedores(sheet, resumen, r, sheetFor);
 }
 
-/* ─────────────────────────── hoja de datos + export ─────────────────────────── */
+/* ═══════════════════════════ hoja de datos + orquestación ═══════════════════════════ */
 
 /**
- * Exporta el hallazgo "Activos GDH":
- *   Hoja 1 "ACTIVOS GDH" -> datos, cabeceras coloreadas por grupo.
- *   Hoja 2 "RESUMEN"     -> conteos por Tipo Rol (Planilla / FFVV / Proveedores), desde B2.
+ * Exporta el hallazgo "Activos GDH" en un solo libro (desde el botón Export):
+ *   1) "ACTIVOS GDH" -> todos los datos.
+ *   2) "RESUMEN"     -> conteos/%; cada sociedad enlaza a su hoja de detalle.
+ *   3) Hojas de detalle por escenario con hallazgos (Planilla/FFVV/Proveedores
+ *      × Sociedad) + columnas Acción Correctiva y Comentario.
  */
 export async function exportActivosGdhToExcel(
   rows: HallazgoAplicacion[],
@@ -210,6 +318,7 @@ export async function exportActivosGdhToExcel(
   workbook.creator = 'Certificación de Perfiles';
   workbook.created = new Date();
 
+  // 1) Hoja de datos completa.
   const columns: ColumnDef[] = activosGdhColumns;
   const sheet = workbook.addWorksheet('ACTIVOS GDH', { views: [{ state: 'frozen', ySplit: 1 }] });
   sheet.columns = columns.map((c) => ({ key: c.key, width: c.width ?? 18 }));
@@ -229,11 +338,18 @@ export async function exportActivosGdhToExcel(
       writeCell(excelRow.getCell(idx + 1), row[col.key], col.isDate);
     });
   });
-
   sheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: columns.length } };
 
-  // Segunda hoja: RESUMEN (solo este hallazgo).
-  addResumenSheet(workbook, rows);
+  // Escenarios con hallazgos -> hojas de detalle + lookup para hipervínculos.
+  const detalles = buildDetalles(rows);
+  const sheetFor: SheetFor = (tipoRol, sociedad) =>
+    detalles.find((d) => norm(d.tipoRol) === norm(tipoRol) && norm(d.sociedad) === norm(sociedad))?.sheetName;
+
+  // 2) RESUMEN (con enlaces).
+  addResumenSheet(workbook, rows, sheetFor);
+
+  // 3) Hojas de detalle.
+  for (const det of detalles) writeDetalleSheet(workbook, det);
 
   const buffer = await workbook.xlsx.writeBuffer();
   saveAs(
