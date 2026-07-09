@@ -24,6 +24,9 @@ export const activosGdhColumns: ColumnDef[] = [
   { key: 'nombre colaborador', header: 'Nombre Colaborador', group: 'C5', widthPx: 240, width: 30 },
   { key: 'dni', header: 'DNI', group: 'C5', widthPx: 120, width: 14 },
   { key: 'sociedad', header: 'Sociedad', group: 'C5', widthPx: 140, width: 16 },
+  { key: 'funcion', header: 'Funcion', group: 'C5', widthPx: 140, width: 16 },
+  { key: 'unidad organizativa', header: 'Unidad Organizativa', group: 'C5', widthPx: 180, width: 24 },
+  { key: 'servicio', header: 'Servicio', group: 'C5', widthPx: 150, width: 20 },
 
   // --- C2 · DNI vs Usuarios ---
   { key: 'tipo_dnivsuser', header: 'TIPO_dnivsuser', group: 'C2', widthPx: 160, width: 18 },
