@@ -11,7 +11,6 @@ import {
   countByResponsible,
   collectComentarios,
   type ScenarioDef,
-  type ScenarioContext,
 } from '@/lib/resumen/scenario-engine';
 import type { ColumnDef } from '../aplicaciones/columns';
 import type { HallazgoAplicacion } from '@/types/hallazgo';
@@ -23,8 +22,6 @@ export { rowsForScenario, countByResponsible } from '@/lib/resumen/scenario-engi
 export const scenarios = adScenarios;
 
 export interface ExportResumenAdOptions {
-  /** Mes de ejecución 'YYYY-MM' (mes de la fecha de corte) para H2. */
-  mesEjecucion?: string;
   fileName?: string;
 }
 
@@ -103,8 +100,7 @@ export async function exportResumenAdExcel(
   rows: Row[],
   options: ExportResumenAdOptions = {},
 ): Promise<void> {
-  const { mesEjecucion, fileName = 'resumen-hallazgos-active-directory.xlsx' } = options;
-  const ctx: ScenarioContext = { mesEjecucion };
+  const { fileName = 'resumen-hallazgos-active-directory.xlsx' } = options;
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'Certificación de Usuarios';
@@ -147,7 +143,7 @@ export async function exportResumenAdExcel(
 
   let rowIndex = 5;
   for (const scenario of adScenarios) {
-    const scenarioRows = rowsForScenario(rows, scenario, ctx);
+    const scenarioRows = rowsForScenario(rows, scenario);
     const total = scenarioRows.length;
     const gdh = countByResponsible(scenarioRows, 'GDH');
     const accesos = countByResponsible(scenarioRows, 'ACCESOS');

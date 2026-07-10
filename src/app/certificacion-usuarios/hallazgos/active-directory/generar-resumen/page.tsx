@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   UploadCloud,
   FileSpreadsheet,
@@ -9,15 +9,12 @@ import {
   CheckCircle2,
   AlertCircle,
   RotateCcw,
-  CalendarClock,
 } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/Button';
 import { parseDetailExcelAd } from '@/features/usuarios/hallazgos/active-directory/resumen-ad/import-excel-ad';
 import { buildResumenAd } from '@/features/usuarios/hallazgos/active-directory/resumen-ad/resumen-ad';
 import { exportResumenAdExcel } from '@/features/usuarios/hallazgos/active-directory/export-resumen-ad';
-import { SWR_KEYS } from '@/features/usuarios/hallazgos/keys';
-import { idbGet } from '@/lib/idb-cache';
 import type { HallazgoAplicacion } from '@/types/hallazgo';
 
 const nf = new Intl.NumberFormat('es-PE');
@@ -25,13 +22,6 @@ const nf = new Intl.NumberFormat('es-PE');
 interface CargaResultado {
   fileName: string;
   detailRows: HallazgoAplicacion[];
-}
-
-/** 'YYYY-MM-DD…' -> 'YYYY-MM'. */
-function toMonth(fecha?: string | null): string {
-  if (!fecha) return '';
-  const m = fecha.match(/^(\d{4})-(\d{2})/);
-  return m ? `${m[1]}-${m[2]}` : '';
 }
 
 export default function GenerarResumenActiveDirectoryPage() {
@@ -42,30 +32,10 @@ export default function GenerarResumenActiveDirectoryPage() {
   const [error, setError] = useState<string | null>(null);
   const [carga, setCarga] = useState<CargaResultado | null>(null);
 
-  // Mes de ejecución (mes de la fecha de corte). Se precarga desde el dataset de
-  // AD persistido en IndexedDB y queda editable.
-  const [mesEjecucion, setMesEjecucion] = useState('');
-
-  useEffect(() => {
-    let cancel = false;
-    void (async () => {
-      try {
-        const env = await idbGet<{ fechaRef?: string }>(SWR_KEYS.hallazgosAd);
-        const mes = toMonth(env?.fechaRef);
-        if (!cancel && mes) setMesEjecucion(mes);
-      } catch {
-        /* sin corte persistido: se deja vacío y el usuario lo ingresa */
-      }
-    })();
-    return () => {
-      cancel = true;
-    };
-  }, []);
-
-  // El preview se recalcula en vivo si cambia el archivo o el mes de ejecución.
+  // El preview se recalcula si cambia el archivo cargado.
   const resumen = useMemo(
-    () => (carga ? buildResumenAd(carga.detailRows, { mesEjecucion: mesEjecucion || undefined }) : null),
-    [carga, mesEjecucion],
+    () => (carga ? buildResumenAd(carga.detailRows) : null),
+    [carga],
   );
 
   const processFile = useCallback(async (file: File) => {
@@ -104,7 +74,7 @@ export default function GenerarResumenActiveDirectoryPage() {
     if (!carga) return;
     setDownloading(true);
     try {
-      await exportResumenAdExcel(carga.detailRows, { mesEjecucion: mesEjecucion || undefined });
+      await exportResumenAdExcel(carga.detailRows);
     } finally {
       setDownloading(false);
     }
@@ -142,24 +112,6 @@ export default function GenerarResumenActiveDirectoryPage() {
               y descarga el resumen por escenarios (H1_AD a H7_AD).
             </li>
           </ol>
-        </div>
-
-        {/* Mes de ejecución (para el postcese de H2) */}
-        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-outline-variant bg-surface-container-lowest px-5 py-4 shadow-ambient">
-          <CalendarClock size={18} className="text-primary" />
-          <label htmlFor="mes-ejecucion" className="text-body-md font-semibold text-on-surface">
-            Mes de ejecución
-          </label>
-          <input
-            id="mes-ejecucion"
-            type="month"
-            value={mesEjecucion}
-            onChange={(e) => setMesEjecucion(e.target.value)}
-            className="rounded-md border border-outline-variant bg-surface px-3 py-1.5 text-body-md text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
-          />
-          <span className="text-body-md text-on-surface-variant">
-            Se toma de la fecha de corte de AD. Filtra el postcese de H2 (cesados en ese mes).
-          </span>
         </div>
 
         {/* Zona de carga / resultado */}

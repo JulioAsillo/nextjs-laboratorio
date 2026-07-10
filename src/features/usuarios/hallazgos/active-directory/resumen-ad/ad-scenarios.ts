@@ -68,10 +68,8 @@ export const adScenarios: ScenarioDef[] = [
     ],
     filters: [
       { field: 'TIPO_dnivsuser', op: 'equals', value: 'USUARIO' },
-      // Postcese: solo cesados en el mes de ejecución (mes de la fecha de corte).
-      // Si la fila no tiene cese en ese mes, no entra (-> si nadie entra, no se
-      // crea la hoja del escenario y queda en 0).
-      { field: 'Fecha Cese', op: 'monthEquals' },
+      // El recorte por periodo (cesados en el mes de corte) lo resuelve el
+      // backend; el resumen solo cuenta por el flag "Login Post Cese".
     ],
   },
   {
