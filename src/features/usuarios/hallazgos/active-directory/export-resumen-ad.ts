@@ -9,7 +9,6 @@ import { styleHeader } from '@/lib/excel/style';
 import {
   rowsForScenario,
   countByResponsible,
-  collectComentarios,
   type ScenarioDef,
 } from '@/lib/resumen/scenario-engine';
 import type { ColumnDef } from '../aplicaciones/columns';
@@ -152,7 +151,8 @@ export async function exportResumenAdExcel(
     summary.getCell(`B${rowIndex}`).value = total;
     summary.getCell(`C${rowIndex}`).value = gdh;
     summary.getCell(`D${rowIndex}`).value = accesos;
-    summary.getCell(`F${rowIndex}`).value = collectComentarios(scenarioRows);
+    // Comentario de la hoja resumen: se deja en blanco a propósito.
+    summary.getCell(`F${rowIndex}`).value = '';
 
     // "Si no hay hallazgos no se considera": queda en 0, sin hoja ni hipervínculo.
     if (total > 0) {
