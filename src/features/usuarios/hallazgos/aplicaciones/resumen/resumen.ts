@@ -1,16 +1,15 @@
 import type { HallazgoAplicacion } from '@/types/hallazgo';
 import { KEY_APLICACION, KEY_ESCENARIO, KEY_RESPONSABLE } from '../columns';
+import { hasGdh, hasAccesos } from '@/lib/resumen/scenario-engine';
 
 export interface ResumenRow {
   aplicacion: string;
   h1Total: number; // Cesados - N° Hallazgos
   h1Gdh: number;
   h1Accesos: number;
-  h1Ambos: number;
   h2Total: number; // No identificados - N° Hallazgos
   h2Gdh: number;
   h2Accesos: number;
-  h2Ambos: number;
 }
 
 export interface Resumen {
@@ -26,24 +25,11 @@ export const matchesH1 = (esc: string) => {
 /** H2: el escenario CONTIENE "no identificado". Agrega más términos aquí si surgen. */
 export const matchesH2 = (esc: string) => esc.toLowerCase().includes('no identificado');
 
-/**
- * Clasifica el Responsable (ya en MAYÚSCULAS) de forma EXCLUYENTE.
- * "GDH | ACCESOS" / "ACCESOS | GDH" -> AMBOS.
- */
-function classifyResp(resp: string): 'GDH' | 'ACCESOS' | 'AMBOS' | 'OTRO' {
-  const g = resp.includes('GDH');
-  const a = resp.includes('ACCESO');
-  if (g && a) return 'AMBOS';
-  if (g) return 'GDH';
-  if (a) return 'ACCESOS';
-  return 'OTRO';
-}
-
 function emptyRow(aplicacion: string): ResumenRow {
   return {
     aplicacion,
-    h1Total: 0, h1Gdh: 0, h1Accesos: 0, h1Ambos: 0,
-    h2Total: 0, h2Gdh: 0, h2Accesos: 0, h2Ambos: 0,
+    h1Total: 0, h1Gdh: 0, h1Accesos: 0,
+    h2Total: 0, h2Gdh: 0, h2Accesos: 0,
   };
 }
 
@@ -71,19 +57,18 @@ export function buildResumen(rows: HallazgoAplicacion[]): Resumen {
     const esc = (r[KEY_ESCENARIO] ?? '').trim();
     if (!esc) continue; // vacío no cuenta
 
-    const resp = (r[KEY_RESPONSABLE] ?? '').trim().toUpperCase();
-    const tipo = classifyResp(resp);
+    const resp = (r[KEY_RESPONSABLE] ?? '').trim();
+    const esGdh = hasGdh(resp);
+    const esAccesos = hasAccesos(resp);
 
     if (matchesH1(esc)) {
       acc.h1Total++;
-      if (tipo === 'GDH') acc.h1Gdh++;
-      else if (tipo === 'ACCESOS') acc.h1Accesos++;
-      else if (tipo === 'AMBOS') acc.h1Ambos++;
+      if (esGdh) acc.h1Gdh++;
+      if (esAccesos) acc.h1Accesos++;
     } else if (matchesH2(esc)) {
       acc.h2Total++;
-      if (tipo === 'GDH') acc.h2Gdh++;
-      else if (tipo === 'ACCESOS') acc.h2Accesos++;
-      else if (tipo === 'AMBOS') acc.h2Ambos++;
+      if (esGdh) acc.h2Gdh++;
+      if (esAccesos) acc.h2Accesos++;
     }
   }
 
@@ -96,11 +81,9 @@ export function buildResumen(rows: HallazgoAplicacion[]): Resumen {
     total.h1Total += r.h1Total;
     total.h1Gdh += r.h1Gdh;
     total.h1Accesos += r.h1Accesos;
-    total.h1Ambos += r.h1Ambos;
     total.h2Total += r.h2Total;
     total.h2Gdh += r.h2Gdh;
     total.h2Accesos += r.h2Accesos;
-    total.h2Ambos += r.h2Ambos;
   }
 
   return { rows: rowsArr, total };

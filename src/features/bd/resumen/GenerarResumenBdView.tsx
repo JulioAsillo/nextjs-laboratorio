@@ -223,7 +223,7 @@ function MatrixTable({ title, matrix }: { title: string; matrix: ResumenMatrix }
                 <th key={s.code} className="px-3 py-2 text-right" title={s.title}>
                   {s.hx}
                   {s.reportable && (
-                    <span className="ml-1 text-label-caps uppercase text-on-surface-variant/70">·G/A/A+G</span>
+                    <span className="ml-1 text-label-caps uppercase text-on-surface-variant/70">·G/A</span>
                   )}
                 </th>
               ))}
@@ -240,7 +240,7 @@ function MatrixTable({ title, matrix }: { title: string; matrix: ResumenMatrix }
                       {c.total}
                       {s.reportable && (
                         <span className="ml-1 text-on-surface-variant/70">
-                          ({c.gdh}/{c.accesos}/{c.ambos})
+                          ({c.gdh}/{c.accesos})
                         </span>
                       )}
                     </td>
@@ -257,7 +257,7 @@ function MatrixTable({ title, matrix }: { title: string; matrix: ResumenMatrix }
                     {t.total}
                     {s.reportable && (
                       <span className="ml-1 text-on-surface-variant/70">
-                        ({t.gdh}/{t.accesos}/{t.ambos})
+                        ({t.gdh}/{t.accesos})
                       </span>
                     )}
                   </td>

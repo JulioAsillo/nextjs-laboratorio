@@ -19,8 +19,7 @@ import type { HallazgoAplicacion } from '@/types/hallazgo';
 type Row = HallazgoAplicacion;
 
 // Re-export para compatibilidad / acceso desde otros módulos si hiciera falta.
-export { rowsForScenario, countByResponsible, classifyResponsible } from '@/lib/resumen/scenario-engine';
-export type { ResponsableTipo } from '@/lib/resumen/scenario-engine';
+export { rowsForScenario, countByResponsible } from '@/lib/resumen/scenario-engine';
 export const scenarios = adScenarios;
 
 export interface ExportResumenAdOptions {
@@ -120,16 +119,15 @@ export async function exportResumenAdExcel(
     { width: 16 }, // B Total
     { width: 16 }, // C GDH
     { width: 18 }, // D ACCESOS
-    { width: 18 }, // E GDH | ACCESOS
-    { width: 14 }, // F Hoja
-    { width: 38 }, // G comentario
+    { width: 14 }, // E Hoja
+    { width: 38 }, // F comentario
   ];
 
-  summary.mergeCells('B2:F2');
+  summary.mergeCells('B2:E2');
   summary.getCell('B2').value = 'AD';
   styleSummaryCell(summary.getCell('B2'), 'F7DCCB', true);
 
-  summary.mergeCells('B3:F3');
+  summary.mergeCells('B3:E3');
   summary.getCell('B3').value = 'VIDA-PPS';
   styleSummaryCell(summary.getCell('B3'), 'D9E6F2', true);
 
@@ -138,9 +136,8 @@ export async function exportResumenAdExcel(
     { cell: 'B4', value: 'N° Hallazgos', fill: 'FFFFFF' },
     { cell: 'C4', value: 'Hallazgos GDH', fill: 'FFFFFF' },
     { cell: 'D4', value: 'Hallazgos ACCESOS', fill: 'FFFFFF' },
-    { cell: 'E4', value: 'Hallazgos GDH | ACCESOS', fill: 'FFFFFF' },
-    { cell: 'F4', value: 'Hallazgos', fill: 'D9E6F2' },
-    { cell: 'G4', value: 'Comentario', fill: 'FFFFFF' },
+    { cell: 'E4', value: 'Hallazgos', fill: 'D9E6F2' },
+    { cell: 'F4', value: 'Comentario', fill: 'FFFFFF' },
   ];
 
   headers.forEach(({ cell, value, fill }) => {
@@ -154,32 +151,30 @@ export async function exportResumenAdExcel(
     const total = scenarioRows.length;
     const gdh = countByResponsible(scenarioRows, 'GDH');
     const accesos = countByResponsible(scenarioRows, 'ACCESOS');
-    const ambos = countByResponsible(scenarioRows, 'AMBOS');
 
     summary.getCell(`A${rowIndex}`).value = scenario.title;
     summary.getCell(`B${rowIndex}`).value = total;
     summary.getCell(`C${rowIndex}`).value = gdh;
     summary.getCell(`D${rowIndex}`).value = accesos;
-    summary.getCell(`E${rowIndex}`).value = ambos;
-    summary.getCell(`G${rowIndex}`).value = collectComentarios(scenarioRows);
+    summary.getCell(`F${rowIndex}`).value = collectComentarios(scenarioRows);
 
     // "Si no hay hallazgos no se considera": queda en 0, sin hoja ni hipervínculo.
     if (total > 0) {
-      summary.getCell(`F${rowIndex}`).value = {
+      summary.getCell(`E${rowIndex}`).value = {
         text: scenario.code,
         hyperlink: `#'${scenario.code}'!A1`,
       };
       buildDetailSheet(workbook, scenario, scenarioRows);
     } else {
-      summary.getCell(`F${rowIndex}`).value = scenario.code;
+      summary.getCell(`E${rowIndex}`).value = scenario.code;
     }
 
-    ['A', 'B', 'C', 'D', 'E', 'F', 'G'].forEach((col) =>
+    ['A', 'B', 'C', 'D', 'E', 'F'].forEach((col) =>
       styleDataCell(summary.getCell(`${col}${rowIndex}`)),
     );
 
     if (total > 0) {
-      summary.getCell(`F${rowIndex}`).font = {
+      summary.getCell(`E${rowIndex}`).font = {
         name: 'Calibri',
         size: 11,
         color: { argb: '0563C1' },

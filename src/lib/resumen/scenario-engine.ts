@@ -119,25 +119,31 @@ export function rowsForScenario(rows: Row[], s: ScenarioDef, ctx: ScenarioContex
 }
 
 /* ------------------------------------------------------------------ */
-/* Responsable (clasificación EXCLUYENTE: solo GDH / solo ACCESOS / AMBOS) */
+/* Responsable (clasificación INCLUSIVA: una fila puede sumar a GDH y a ACCESOS) */
 /* ------------------------------------------------------------------ */
 
-export type ResponsableTipo = 'GDH' | 'ACCESOS' | 'AMBOS' | 'OTRO';
-
-export function classifyResponsible(value: unknown): ResponsableTipo {
-  const v = norm(value);
-  const hasGdh = v.includes('GDH');
-  const hasAcc = v.includes('ACCESO');
-  if (hasGdh && hasAcc) return 'AMBOS';
-  if (hasGdh) return 'GDH';
-  if (hasAcc) return 'ACCESOS';
-  return 'OTRO';
+/**
+ * Clasificación de Responsable NO excluyente: una fila puede pertenecer a GDH
+ * y a ACCESOS a la vez. Un valor "GDH | ACCESOS" cuenta en AMBAS columnas.
+ *
+ * (Antes existía un bucket excluyente "AMBOS"; se eliminó por decisión de
+ * negocio: ahora "GDH | ACCESOS" suma +1 a GDH y +1 a ACCESOS.)
+ */
+export function hasGdh(value: unknown): boolean {
+  return norm(value).includes('GDH');
+}
+export function hasAccesos(value: unknown): boolean {
+  return norm(value).includes('ACCESO');
 }
 
-export function countByResponsible(rows: Row[], responsible: 'GDH' | 'ACCESOS' | 'AMBOS'): number {
-  return rows.filter(
-    (row) => classifyResponsible((row as Record<string, unknown>).Responsable) === responsible,
-  ).length;
+/**
+ * Cuenta filas cuyo `Responsable` incluye el tipo pedido. INCLUSIVO: las filas
+ * "GDH | ACCESOS" se cuentan tanto en 'GDH' como en 'ACCESOS' (por eso
+ * gdh + accesos puede superar el total del escenario).
+ */
+export function countByResponsible(rows: Row[], responsible: 'GDH' | 'ACCESOS'): number {
+  const has = responsible === 'GDH' ? hasGdh : hasAccesos;
+  return rows.filter((row) => has((row as Record<string, unknown>).Responsable)).length;
 }
 
 /** Junta los comentarios distintos y no vacíos de un set de filas. */
@@ -160,7 +166,6 @@ export interface ResumenScenarioRow {
   total: number;
   gdh: number;
   accesos: number;
-  ambos: number;
 }
 
 export interface ResumenScenario {
@@ -183,7 +188,6 @@ export function buildScenarioResumen(
       total: scoped.length,
       gdh: countByResponsible(scoped, 'GDH'),
       accesos: countByResponsible(scoped, 'ACCESOS'),
-      ambos: countByResponsible(scoped, 'AMBOS'),
     };
   });
 

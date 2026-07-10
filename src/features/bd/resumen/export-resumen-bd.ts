@@ -7,6 +7,7 @@ import { writeCell } from '@/lib/excel/cell-format';
 import { styleHeader } from '@/lib/excel/style';
 import type { ColumnDef } from '@/features/usuarios/hallazgos/aplicaciones/columns';
 import type { HallazgoAplicacion } from '@/types/hallazgo';
+import { hasGdh, hasAccesos } from '@/lib/resumen/scenario-engine';
 
 type Row = HallazgoAplicacion;
 
@@ -57,25 +58,6 @@ function isPositive(value: unknown): boolean {
   return !['', 'NO', '0', 'FALSE', 'N', 'NULL', '-', 'N/A'].includes(v);
 }
 
-/**
- * Clasifica el Responsable de una fila de forma EXCLUYENTE:
- *  - 'AMBOS'   -> contiene GDH y ACCESO(S)  (p.ej. "GDH | ACCESOS")
- *  - 'GDH'     -> solo GDH
- *  - 'ACCESOS' -> solo ACCESO(S)
- *  - 'OTRO'    -> vacío, "-", TECNOLOGIA, etc.
- */
-export type ResponsableTipo = 'GDH' | 'ACCESOS' | 'AMBOS' | 'OTRO';
-
-export function classifyResponsible(value: unknown): ResponsableTipo {
-  const v = normalize(value);
-  const hasGdh = v.includes('GDH');
-  const hasAcc = v.includes('ACCESO');
-  if (hasGdh && hasAcc) return 'AMBOS';
-  if (hasGdh) return 'GDH';
-  if (hasAcc) return 'ACCESOS';
-  return 'OTRO';
-}
-
 /** Filas de un escenario (flag positiva). */
 export function rowsForScenario(rows: Row[], scenario: BdScenario): Row[] {
   return rows.filter((row) => isPositive((row as Record<string, unknown>)[scenario.flagKey]));
@@ -101,23 +83,20 @@ export function monitoreoValues(rows: Row[]): string[] {
 
 export interface ResumenCell {
   total: number;
-  /** Solo GDH. */
+  /** Filas cuyo Responsable incluye GDH (inclusivo: "GDH | ACCESOS" también cuenta). */
   gdh: number;
-  /** Solo ACCESOS. */
+  /** Filas cuyo Responsable incluye ACCESO(S) (inclusivo). */
   accesos: number;
-  /** GDH | ACCESOS (ambos). */
-  ambos: number;
 }
 
 /** Conteo de un escenario para un "monitoreo" concreto. */
 export function cellFor(rows: Row[], scenario: BdScenario, monitoreo: string): ResumenCell {
   const scoped = rowsForScenario(rows, scenario).filter((r) => monitoreoOf(r) === monitoreo);
-  const cell: ResumenCell = { total: scoped.length, gdh: 0, accesos: 0, ambos: 0 };
+  const cell: ResumenCell = { total: scoped.length, gdh: 0, accesos: 0 };
   for (const r of scoped) {
-    const tipo = classifyResponsible((r as Record<string, unknown>).Responsable);
-    if (tipo === 'GDH') cell.gdh += 1;
-    else if (tipo === 'ACCESOS') cell.accesos += 1;
-    else if (tipo === 'AMBOS') cell.ambos += 1;
+    const resp = (r as Record<string, unknown>).Responsable;
+    if (hasGdh(resp)) cell.gdh += 1;
+    if (hasAccesos(resp)) cell.accesos += 1;
   }
   return cell;
 }
@@ -154,7 +133,7 @@ function writeMatrix(
   rows: Row[],
 ): number {
   const monitoreos = monitoreoValues(rows);
-  const subCols = scenarios.map((s) => (s.reportable ? 4 : 1));
+  const subCols = scenarios.map((s) => (s.reportable ? 3 : 1));
   const totalCols = 1 + subCols.reduce((a, b) => a + b, 0);
   const lastCol = totalCols; // col 1 = etiqueta
 
@@ -193,7 +172,7 @@ function writeMatrix(
 
     // Sub-cabeceras.
     const subHeaders = s.reportable
-      ? ['Hallazgos inicial', 'Reportar GDH', 'Reportar Acceso', 'GDH | ACCESOS']
+      ? ['Hallazgos inicial', 'Reportar GDH', 'Reportar Acceso']
       : ['Hallazgos inicial'];
     subHeaders.forEach((h, k) => {
       const c = sheet.getCell(rHead, col + k);
@@ -205,7 +184,7 @@ function writeMatrix(
   });
 
   // Filas de datos.
-  const totals: ResumenCell[] = scenarios.map(() => ({ total: 0, gdh: 0, accesos: 0, ambos: 0 }));
+  const totals: ResumenCell[] = scenarios.map(() => ({ total: 0, gdh: 0, accesos: 0 }));
   monitoreos.forEach((m, ri) => {
     const r = rData0 + ri;
     const label = sheet.getCell(r, 1);
@@ -219,10 +198,9 @@ function writeMatrix(
       totals[i].total += cell.total;
       totals[i].gdh += cell.gdh;
       totals[i].accesos += cell.accesos;
-      totals[i].ambos += cell.ambos;
 
       const values = s.reportable
-        ? [cell.total, cell.gdh, cell.accesos, cell.ambos]
+        ? [cell.total, cell.gdh, cell.accesos]
         : [cell.total];
       values.forEach((v, k) => {
         const cc = sheet.getCell(r, c + k);
@@ -241,7 +219,7 @@ function writeMatrix(
   let tc = 2;
   scenarios.forEach((s, i) => {
     const values = s.reportable
-      ? [totals[i].total, totals[i].gdh, totals[i].accesos, totals[i].ambos]
+      ? [totals[i].total, totals[i].gdh, totals[i].accesos]
       : [totals[i].total];
     values.forEach((v, k) => {
       const cc = sheet.getCell(rTotal, tc + k);

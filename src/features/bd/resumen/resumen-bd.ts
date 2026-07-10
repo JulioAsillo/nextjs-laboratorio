@@ -27,7 +27,7 @@ function buildMatrix(
   const monitoreos = monitoreoValues(rows);
   const cells: Record<string, Record<string, ResumenCell>> = {};
   const totals: Record<string, ResumenCell> = {};
-  for (const s of scenarios) totals[s.code] = { total: 0, gdh: 0, accesos: 0, ambos: 0 };
+  for (const s of scenarios) totals[s.code] = { total: 0, gdh: 0, accesos: 0 };
 
   for (const m of monitoreos) {
     cells[m] = {};
@@ -37,7 +37,6 @@ function buildMatrix(
       totals[s.code].total += c.total;
       totals[s.code].gdh += c.gdh;
       totals[s.code].accesos += c.accesos;
-      totals[s.code].ambos += c.ambos;
     }
   }
 

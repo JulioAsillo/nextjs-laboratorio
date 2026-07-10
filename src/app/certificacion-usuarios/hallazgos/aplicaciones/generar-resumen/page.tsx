@@ -178,11 +178,9 @@ export default function GenerarResumenPage() {
                     <th className="px-4 py-2 text-right">H1 N°</th>
                     <th className="px-4 py-2 text-right">H1 GDH</th>
                     <th className="px-4 py-2 text-right">H1 ACC</th>
-                    <th className="px-4 py-2 text-right">H1 A+G</th>
                     <th className="px-4 py-2 text-right">H2 N°</th>
                     <th className="px-4 py-2 text-right">H2 GDH</th>
                     <th className="px-4 py-2 text-right">H2 ACC</th>
-                    <th className="px-4 py-2 text-right">H2 A+G</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -192,11 +190,9 @@ export default function GenerarResumenPage() {
                       <td className="px-4 py-1.5 text-right">{r.h1Total}</td>
                       <td className="px-4 py-1.5 text-right">{r.h1Gdh}</td>
                       <td className="px-4 py-1.5 text-right">{r.h1Accesos}</td>
-                      <td className="px-4 py-1.5 text-right">{r.h1Ambos}</td>
                       <td className="px-4 py-1.5 text-right">{r.h2Total}</td>
                       <td className="px-4 py-1.5 text-right">{r.h2Gdh}</td>
                       <td className="px-4 py-1.5 text-right">{r.h2Accesos}</td>
-                      <td className="px-4 py-1.5 text-right">{r.h2Ambos}</td>
                     </tr>
                   ))}
                   <tr className="border-t-2 border-outline bg-surface-container-high font-semibold text-on-surface">
@@ -204,11 +200,9 @@ export default function GenerarResumenPage() {
                     <td className="px-4 py-2 text-right">{total!.h1Total}</td>
                     <td className="px-4 py-2 text-right">{total!.h1Gdh}</td>
                     <td className="px-4 py-2 text-right">{total!.h1Accesos}</td>
-                    <td className="px-4 py-2 text-right">{total!.h1Ambos}</td>
                     <td className="px-4 py-2 text-right">{total!.h2Total}</td>
                     <td className="px-4 py-2 text-right">{total!.h2Gdh}</td>
                     <td className="px-4 py-2 text-right">{total!.h2Accesos}</td>
-                    <td className="px-4 py-2 text-right">{total!.h2Ambos}</td>
                   </tr>
                 </tbody>
               </table>

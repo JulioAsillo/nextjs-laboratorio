@@ -228,7 +228,6 @@ export default function GenerarResumenActiveDirectoryPage() {
                     <th className="px-4 py-2 text-right">N°</th>
                     <th className="px-4 py-2 text-right">GDH</th>
                     <th className="px-4 py-2 text-right">ACCESOS</th>
-                    <th className="px-4 py-2 text-right">GDH | ACC</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -244,7 +243,6 @@ export default function GenerarResumenActiveDirectoryPage() {
                       <td className="px-4 py-1.5 text-right">{r.total}</td>
                       <td className="px-4 py-1.5 text-right">{r.gdh}</td>
                       <td className="px-4 py-1.5 text-right">{r.accesos}</td>
-                      <td className="px-4 py-1.5 text-right">{r.ambos}</td>
                     </tr>
                   ))}
                   <tr className="border-t-2 border-outline bg-surface-container-high font-semibold text-on-surface">
@@ -257,9 +255,6 @@ export default function GenerarResumenActiveDirectoryPage() {
                     </td>
                     <td className="px-4 py-2 text-right">
                       {resumen.rows.reduce((a, r) => a + r.accesos, 0)}
-                    </td>
-                    <td className="px-4 py-2 text-right">
-                      {resumen.rows.reduce((a, r) => a + r.ambos, 0)}
                     </td>
                   </tr>
                 </tbody>
