@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { FuentesCargadasPanel, type PanelMode } from '@/features/usuarios/cargar/components/FuentesCargadasPanel';
 import { FuenteCardBd, type LoadStatus } from './FuenteCardBd';
 import { DatosModalBd } from './DatosModalBd';
-import { bdFuentes, BD_GROUPS } from './fuentes';
+import { bdFuentes, BD_GROUPS } from '@/config/fuentes';
 import { fetchDatosBd, bdDatosKey } from './datos';
 import { purgeAllBd, clearAllUploadsBd, isSlotUploadedBd } from './upload';
 import type { DatosResult } from '@/features/usuarios/cargar/datos';

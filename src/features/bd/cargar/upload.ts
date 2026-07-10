@@ -2,7 +2,7 @@ import { sendJson } from '@/lib/http';
 import { uploadFuente } from '@/features/usuarios/cargar/upload-fuente';
 import { deleteFuente, type DeleteResult, type PurgeResult } from '@/features/usuarios/cargar/delete-fuente';
 import { BD_DBS_PATH } from './endpoints';
-import type { BdFuente } from './fuentes';
+import type { BdFuente } from '@/config/fuentes';
 
 /**
  * UPLOAD: idéntico a Usuarios para TODAS las cards (/datos/upload?file_name=...).

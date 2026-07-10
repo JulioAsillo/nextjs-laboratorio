@@ -17,7 +17,7 @@ import { useFocusCard } from '@/lib/use-focus-card';
 import { useCargarCache } from '@/lib/use-cargar-cache';
 import { useBulkUpload, useUploadedFuentes } from '@/lib/bulk-upload';
 import { idbDel } from '@/lib/idb-cache';
-import { fuentes } from './fuentes';
+import { perfilesFuentes as fuentes } from '@/config/fuentes';
 
 /** Caché propia de ESTA pantalla -> aísla el "cargado/estado" de Perfiles del de Usuarios. */
 const CACHE_KEY = 'cargar:perfiles';

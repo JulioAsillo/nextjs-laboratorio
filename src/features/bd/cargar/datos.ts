@@ -1,7 +1,7 @@
 import { getJson } from '@/lib/http';
 import { fetchDatosApp, type DatosRow, type DatosResult } from '@/features/usuarios/cargar/datos';
 import { BD_DBS_PATH } from './endpoints';
-import type { BdFuente } from './fuentes';
+import type { BdFuente } from '@/config/fuentes';
 
 /** Toma el primer array que aparezca dentro de `data`. */
 function pickFirstArray(data: unknown): DatosRow[] {

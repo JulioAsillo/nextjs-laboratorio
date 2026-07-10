@@ -6,9 +6,8 @@ import {
   Files, CloudUpload, Check, Table2, RefreshCw, Database, AlertTriangle, Layers, Trash2,
 } from 'lucide-react';
 import clsx from 'clsx';
-import type { UploadSlot } from '@/features/usuarios/cargar/fuentes';
-import type { BdFuente } from './fuentes';
-import { FORMATOS } from '@/features/usuarios/cargar/fuentes';
+import type { UploadSlot, BdFuente } from '@/config/fuentes';
+import { FORMATOS } from '@/config/fuentes';
 import { readHeaders } from '@/features/usuarios/cargar/read-headers';
 import { isAllowedFormat, validateColumns, type ColumnValidation } from '@/features/usuarios/cargar/validate-fuente';
 import { mergeFilesToXlsx, ORIGIN_COLUMN } from '@/features/usuarios/cargar/merge-fuente';

@@ -7,8 +7,8 @@ import {
   Database, AlertTriangle, Layers, Trash2,
 } from 'lucide-react';
 import clsx from 'clsx';
-import type { Fuente, UploadSlot } from '../fuentes';
-import { FORMATOS } from '../fuentes';
+import type { Fuente, UploadSlot } from '@/config/fuentes';
+import { FORMATOS } from '@/config/fuentes';
 import { readHeaders } from '../read-headers';
 import { isAllowedFormat, validateColumns, type ColumnValidation } from '../validate-fuente';
 import { uploadFuente } from '../upload-fuente';

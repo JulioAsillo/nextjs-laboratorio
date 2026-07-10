@@ -1,4 +1,4 @@
-import { FORMATOS } from './fuentes';
+import { FORMATOS } from '@/config/fuentes';
 
 export interface ColumnValidation {
   ok: boolean;
@@ -6,8 +6,21 @@ export interface ColumnValidation {
   extra: string[]; // columnas del archivo que no se esperaban
 }
 
-/** Normaliza una cabecera: trim + colapsa espacios + toUpperCase. */
-export const normHeader = (s: string) => s.trim().replace(/\s+/g, ' ').toUpperCase();
+/**
+ * Normaliza una cabecera para comparar: quita tildes/diacríticos, recorta,
+ * colapsa espacios y pasa a MAYÚSCULAS.
+ *
+ * Al ignorar tildes, un mismo header canónico (p. ej. "ÁREA DE NÓMINA") acepta
+ * el Excel tanto con tildes como sin ellas ("AREA DE NOMINA"). Esto vale para
+ * TODAS las certificaciones, no solo GDH.
+ */
+export const normHeader = (s: string) =>
+  s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // elimina diacríticos combinantes (tildes, diéresis)
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toUpperCase();
 
 /** Valida la extensión contra los formatos permitidos (.csv, .xls, .xlsx). */
 export function isAllowedFormat(fileName: string): boolean {

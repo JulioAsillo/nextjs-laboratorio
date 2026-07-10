@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { FuenteCard, type LoadStatus } from './components/FuenteCard';
 import { FuentesCargadasPanel, type PanelMode } from './components/FuentesCargadasPanel';
 import { DatosModal } from './components/DatosModal';
-import { fuentes } from './fuentes';
+import { fuentes } from '@/config/fuentes';
 import { fetchDatosApp, type DatosResult } from './datos';
 import { datosKey } from './keys';
 import { purgeAll } from './delete-fuente';
