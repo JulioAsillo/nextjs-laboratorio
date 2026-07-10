@@ -1,8 +1,6 @@
 import { certifications } from '@/config/certifications';
 import type { NavItem } from '@/config/navigation';
-import { fuentes, type Fuente } from '@/features/usuarios/cargar/fuentes';
-import { bdFuentes } from '@/features/bd/cargar/fuentes';
-import { fuentes as perfilesFuentes } from '@/features/perfiles/cargar/fuentes';
+import { fuentes, bdFuentes, perfilesFuentes, type Fuente } from '@/config/fuentes';
 
 /**
  * Índice de búsqueda global (estilo "buscador de menús" de Odoo).
