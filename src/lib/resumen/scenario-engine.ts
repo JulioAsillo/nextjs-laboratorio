@@ -7,9 +7,11 @@ import type { HallazgoAplicacion } from '@/types/hallazgo';
  * La idea es la misma que `fuentes.ts`: toda la lógica vive aquí y cada
  * certificación solo aporta un archivo de CONFIG declarativo (un arreglo de
  * `ScenarioDef`) que dice, por escenario:
- *   - flagKey : columna booleana que marca la pertenencia base.
- *   - columns : qué columnas se PINTAN en la hoja de detalle (las "amarillas").
- *   - filters : filtros extra (en AND) que también afectan el CONTEO del resumen.
+ *   - flagKey            : columna que marca la pertenencia base.
+ *   - matchMode          : cómo se interpreta esa columna ('truthy' | 'exactX').
+ *   - requireResponsible : si true, exige `Responsable` no vacío.
+ *   - columns            : qué columnas se PINTAN en la hoja de detalle.
+ *   - filters            : filtros extra (en AND) que también afectan el CONTEO.
  */
 
 export type Row = HallazgoAplicacion;
@@ -22,6 +24,19 @@ export interface ScenarioContext {
    */
   mesEjecucion?: string;
 }
+
+/**
+ * Cómo se evalúa `flagKey`:
+ *
+ *  - 'truthy' (default) : heurística amplia — cualquier valor que no sea
+ *                         vacío/NO/0/FALSE/… cuenta como positivo. Es el
+ *                         comportamiento histórico; se mantiene para no
+ *                         alterar a los consumidores existentes.
+ *  - 'exactX'           : la celda debe contener EXACTAMENTE 'X' (se aplica
+ *                         trim; se compara en mayúsculas). Cualquier otro
+ *                         valor —incluido vacío— no pertenece al escenario.
+ */
+export type ScenarioMatchMode = 'truthy' | 'exactX';
 
 /**
  * Filtro declarativo aplicado a una fila ADEMÁS del flag del escenario.
@@ -44,8 +59,19 @@ export type RowFilter =
 export interface ScenarioDef {
   code: string;
   title: string;
-  /** Columna booleana que marca pertenencia base. '' = sin flag (solo filtros). */
+  /** Columna que marca pertenencia base. '' = sin flag (solo filtros). */
   flagKey: string;
+  /** Cómo interpretar `flagKey`. Default: 'truthy' (comportamiento histórico). */
+  matchMode?: ScenarioMatchMode;
+  /**
+   * Si es true, la fila solo pertenece al escenario cuando `responsibleKey`
+   * está poblado. Una fila con el flag marcado pero SIN responsable se
+   * considera dato inválido: no cuenta en el resumen ni sale en el detalle.
+   * Default: false (comportamiento histórico).
+   */
+  requireResponsible?: boolean;
+  /** Columna de responsable. Default: 'Responsable'. */
+  responsibleKey?: string;
   /** Keys (de las columnas de la certificación) que se pintan en la hoja de detalle. */
   columns: string[];
   /** Filtros extra; se aplican en AND y afectan el conteo del resumen. */
@@ -60,6 +86,19 @@ function norm(value: unknown): string {
 export function isPositive(value: unknown): boolean {
   const v = norm(value);
   return !['', 'NO', '0', 'FALSE', 'N', 'NULL', '-', 'N/A'].includes(v);
+}
+
+/**
+ * Marca estricta: la celda es exactamente 'X' (tras trim, case-insensitive).
+ * Vacío, 'XX', 'SI', '-' u otros valores devuelven false.
+ */
+export function isExactX(value: unknown): boolean {
+  return norm(value) === 'X';
+}
+
+/** Evalúa `flagKey` según el `matchMode` del escenario. */
+export function matchesFlag(value: unknown, mode: ScenarioMatchMode = 'truthy'): boolean {
+  return mode === 'exactX' ? isExactX(value) : isPositive(value);
 }
 
 /**
@@ -108,9 +147,26 @@ function passesFilter(row: Row, f: RowFilter, ctx: ScenarioContext): boolean {
   }
 }
 
-/** ¿La fila pertenece al escenario? = flag positivo (si hay) Y todos los filtros. */
+/** ¿La celda tiene contenido real (no vacío / no solo espacios)? */
+export function hasValue(value: unknown): boolean {
+  return norm(value) !== '';
+}
+
+/**
+ * ¿La fila pertenece al escenario?
+ *   = flag válido (si hay)
+ *   Y Responsable poblado (si `requireResponsible`)
+ *   Y todos los filtros.
+ *
+ * Es el ÚNICO punto de decisión: lo usan por igual el preview
+ * (`buildScenarioResumen`) y el export (`rowsForScenario`), así que el total
+ * del resumen y las filas de la hoja de detalle nunca se descuadran.
+ */
 export function rowMatchesScenario(row: Row, s: ScenarioDef, ctx: ScenarioContext): boolean {
-  if (s.flagKey && !isPositive(getField(row, s.flagKey))) return false;
+  if (s.flagKey && !matchesFlag(getField(row, s.flagKey), s.matchMode)) return false;
+  if (s.requireResponsible && !hasValue(getField(row, s.responsibleKey ?? 'Responsable'))) {
+    return false;
+  }
   return (s.filters ?? []).every((f) => passesFilter(row, f, ctx));
 }
 

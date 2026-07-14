@@ -23,6 +23,9 @@ export const perfilesColumns: ColumnDef[] = [
   // --- C1 · Aplicación / Exactus Perfiles ---
   { key: 'Aplicación', header: 'Aplicación', group: 'C1', widthPx: 180, width: 22 },
   { key: 'Asignación', header: 'Asignación', group: 'C1', widthPx: 150, width: 16 },
+  { key: 'funcion', header: 'Función', group: 'C1', widthPx: 240, width: 30 },
+  { key: 'unidad organizativa', header: 'Unidad Organizativa', group: 'C1', widthPx: 180, width: 18 },
+  { key: 'servicio', header: 'Servicio', group: 'C1', widthPx: 180, width: 20 },
   { key: 'Usuario', header: 'Usuario', group: 'C1', widthPx: 160, width: 18 },
 
   // --- C2 · DNI vs Usuarios ---
