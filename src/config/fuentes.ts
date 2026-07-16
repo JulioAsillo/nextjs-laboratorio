@@ -254,23 +254,6 @@ export const generalesFuentes: Fuente[] = [
   { id: 'epps_ae', label: 'EPPS AE', group: 'Aplicaciones', appsKey: 'epps_ae', slots: one('epps_ae', COLUMNS.epps_ae) },
   { id: 'epps_ac', label: 'EPPS AC', group: 'Aplicaciones', appsKey: 'epps_ac', slots: one('epps_ac', COLUMNS.epps_ac) },
   { id: 'igwprd_ac', label: 'IGWPRD AC', group: 'Aplicaciones', appsKey: 'igwprd_ac', slots: one('igwprd_ac', COLUMNS.igwprd_ac) },
-  // ---------- Otros Reportes (MISMO backend que Usuarios) ----------
-  {
-    id: 'ad', label: 'Active Directory', group: 'Otros Reportes', appsKey: 'ad',
-    slots: [
-      { fileName: 'ad_pps', label: 'AD PPS', columns: COLUMNS.ad },
-      { fileName: 'ad_vida', label: 'AD Vida', columns: COLUMNS.ad },
-    ],
-  },
-  {
-    id: 'gdh', label: 'GDH', group: 'Otros Reportes', appsKey: 'gdh',
-    slots: [
-      { fileName: 'activos_gdh', label: 'Activos GDH', columns: COLUMNS.gdhActivos },
-      { fileName: 'cesados_gdh', label: 'Cesados GDH', columns: COLUMNS.gdhCesados },
-    ],
-  },
-  { id: 'dni-vs-usuarios', label: 'DNI vs Usuarios', group: 'Otros Reportes', appsKey: 'dnivsuser', slots: one('dni_vs_usuarios', COLUMNS.dniVsUsuarios) },
-  { id: 'entra-id', label: 'Entra ID', group: 'Otros Reportes', appsKey: 'entraid', slots: one('entra_id', COLUMNS.entraId) },
 ];
 
 /* ═══════════════════ Certificación de BASE DE DATOS ══════════════════════
