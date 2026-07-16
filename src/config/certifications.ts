@@ -1,8 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import { ShieldCheck, Database, FileSearch, FileSpreadsheet, Upload, UsersIcon, AppWindow, Network, FileStack } from 'lucide-react';
 import { navigation, type NavItem } from './navigation';
-import { HALLAZGOS_META } from '@/features/generales/hallazgos/registry';
-import { hallazgoHref } from '@/features/generales/hallazgos/types';
 
 /**
  * Registro de certificaciones (estilo "apps" de Odoo).
@@ -83,25 +81,34 @@ const perfilesNav: NavItem[] = [
   },
 ];
 
-/* Navegación de "Certificación de Generales y Especiales".
- *
- * NO está escrita a mano: se DERIVA del registry de hallazgos
- * (features/generales/hallazgos/registry.ts). Agregar un hallazgo nuevo al
- * registry lo hace aparecer en el sidebar y en el buscador automáticamente.
- *
- * Con 1 solo hallazgo se muestra como hoja directa; con 2 o más se agrupa bajo
- * "Hallazgos", igual que Usuarios/Perfiles.
- */
-const generalesHallazgos: NavItem[] = HALLAZGOS_META.map((h) => ({
-  label: h.label,
-  href: hallazgoHref(h.id),
-  icon: h.icon,
-}));
+/* Navegación de "Certificación de Generales y Especiales". Misma estructura que
+   Usuarios y Perfiles: un grupo "Hallazgos" que contiene un item por hallazgo, y
+   "Cargar Información" como hoja aparte.
 
+   Para agregar el hallazgo Nº 2: un objeto hermano dentro de `children`. Si ese
+   hallazgo tiene su "Generar Resumen", va como `children` suyo (ver Aplicaciones
+   o Hallazgo de Perfiles). */
 const generalesNav: NavItem[] = [
-  ...(generalesHallazgos.length > 1
-    ? [{ label: 'Hallazgos', icon: FileSearch, children: generalesHallazgos } as NavItem]
-    : generalesHallazgos),
+  {
+    label: 'Hallazgos',
+    icon: FileSearch,
+    children: [
+      {
+        label: 'Generales y Especiales',
+        href: '/certificacion-generales/hallazgos/generales-especiales',
+        icon: AppWindow,
+        // Cuando exista el resumen de este hallazgo:
+        // children: [
+        //   {
+        //     label: 'Generar Resumen',
+        //     href: '/certificacion-generales/hallazgos/generales-especiales/generar-resumen',
+        //     icon: FileSpreadsheet,
+        //   },
+        // ],
+      },
+      // <- Hallazgo Nº 2 aquí (mismo shape).
+    ],
+  },
   {
     label: 'Cargar Información',
     href: '/certificacion-generales/cargar-informacion',

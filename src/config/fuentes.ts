@@ -122,6 +122,13 @@ export const COLUMNS = {
   /* ---- Solo Base de Datos ---- */
   bdVida: ['USERNAME', 'TYPE', 'TYPE_DESC', 'ISACTIVE', 'ULTIMOLOGEO', 'CREATED', 'UPDATE', 'DATABASEROLE', 'DATABASENAME', 'SERVERROLE'],
   bdGenerales: ['USERNAME', 'ACCOUNT_STATUS', 'LOCK_DATE', 'CREATED', 'PROFILE', 'ULTIMO_LOGIN'],
+
+  /* ---- Solo Generales y Especiales ---- */
+  usuarios_autorizados: ['NOMBRES Y APELLIDOS', 'EQUIPO / CHAPTER', 'EMPRESA', 'CORREO', 'JEFE / CHAPTER LEAD', 'USUARIO DE RED', 'BD EPPS UC', 'BD DBPRODN UC', 'BD OWEB UC', 'BD ODW1 UC', 'BD DBPRODN2 AE', 'BD IGWPRD AE', 'BD EPPS AE', 'BD IGWPRD AC', 'BD EPPS AC' ],
+  epps_ae: ['USERID', 'USERHOST', 'TERMINAL', 'LOGOFF$TIME', 'OBJ$NAME', 'SPARE1', 'NTIMESTAMP#', 'ACTION#'],
+  epps_ac: ['USERID', 'USERHOST', 'TERMINAL', 'LOGOFF$TIME', 'OBJ$NAME', 'SPARE1', 'NTIMESTAMP#', 'ACTION#'],
+  igwprd_ac: ['USERID', 'USERHOST', 'TERMINAL', 'LOGOFF$TIME', 'OBJ$NAME', 'SPARE1', 'NTIMESTAMP#', 'ACTION#'],
+
 } satisfies Record<string, string[]>;
 
 /* Helper interno: card de un solo slot (el caso más común). */
@@ -243,7 +250,10 @@ export const perfilesFuentes: Fuente[] = [
 export const generalesFuentes: Fuente[] = [
   // ---------- Aplicaciones ----------
   // TODO(Julio): fuentes propias de Generales y Especiales.
-
+  { id: 'usuarios_autorizados', label: 'Listas Usuarios Autorizados', group: 'Aplicaciones', appsKey: 'usuarios_autorizados', slots: one('usuarios_autorizados', COLUMNS.usuarios_autorizados) },
+  { id: 'epps_ae', label: 'EPPS AE', group: 'Aplicaciones', appsKey: 'epps_ae', slots: one('epps_ae', COLUMNS.epps_ae) },
+  { id: 'epps_ac', label: 'EPPS AC', group: 'Aplicaciones', appsKey: 'epps_ac', slots: one('epps_ac', COLUMNS.epps_ac) },
+  { id: 'igwprd_ac', label: 'IGWPRD AC', group: 'Aplicaciones', appsKey: 'igwprd_ac', slots: one('igwprd_ac', COLUMNS.igwprd_ac) },
   // ---------- Otros Reportes (MISMO backend que Usuarios) ----------
   {
     id: 'ad', label: 'Active Directory', group: 'Otros Reportes', appsKey: 'ad',
