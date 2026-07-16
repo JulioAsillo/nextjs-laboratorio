@@ -1,6 +1,8 @@
 import type { LucideIcon } from 'lucide-react';
-import { ShieldCheck, Database, FileSearch, FileSpreadsheet, Upload, UsersIcon, AppWindow, Network } from 'lucide-react';
+import { ShieldCheck, Database, FileSearch, FileSpreadsheet, Upload, UsersIcon, AppWindow, Network, FileStack } from 'lucide-react';
 import { navigation, type NavItem } from './navigation';
+import { HALLAZGOS_META } from '@/features/generales/hallazgos/registry';
+import { hallazgoHref } from '@/features/generales/hallazgos/types';
 
 /**
  * Registro de certificaciones (estilo "apps" de Odoo).
@@ -81,6 +83,32 @@ const perfilesNav: NavItem[] = [
   },
 ];
 
+/* Navegación de "Certificación de Generales y Especiales".
+ *
+ * NO está escrita a mano: se DERIVA del registry de hallazgos
+ * (features/generales/hallazgos/registry.ts). Agregar un hallazgo nuevo al
+ * registry lo hace aparecer en el sidebar y en el buscador automáticamente.
+ *
+ * Con 1 solo hallazgo se muestra como hoja directa; con 2 o más se agrupa bajo
+ * "Hallazgos", igual que Usuarios/Perfiles.
+ */
+const generalesHallazgos: NavItem[] = HALLAZGOS_META.map((h) => ({
+  label: h.label,
+  href: hallazgoHref(h.id),
+  icon: h.icon,
+}));
+
+const generalesNav: NavItem[] = [
+  ...(generalesHallazgos.length > 1
+    ? [{ label: 'Hallazgos', icon: FileSearch, children: generalesHallazgos } as NavItem]
+    : generalesHallazgos),
+  {
+    label: 'Cargar Información',
+    href: '/certificacion-generales/cargar-informacion',
+    icon: Upload,
+  },
+];
+
 export const certifications: Certification[] = [
   {
     id: 'usuarios',
@@ -105,7 +133,15 @@ export const certifications: Certification[] = [
     icon: UsersIcon,
     basePath: '/certificacion-perfiles',
     nav: perfilesNav,
-  }
+  },
+  {
+    id: 'generales-especiales',
+    label: 'Certificación de Generales y Especiales',
+    description: 'Hallazgos de la certificación de Generales y Especiales.',
+    icon: FileStack,
+    basePath: '/certificacion-generales',
+    nav: generalesNav,
+  },
 ];
 
 /** Primer `href` que encuentra en un árbol de navegación (la "landing" del módulo). */

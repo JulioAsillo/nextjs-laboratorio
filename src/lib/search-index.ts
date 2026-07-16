@@ -1,6 +1,6 @@
 import { certifications } from '@/config/certifications';
 import type { NavItem } from '@/config/navigation';
-import { fuentes, bdFuentes, perfilesFuentes, type Fuente } from '@/config/fuentes';
+import { fuentes, bdFuentes, perfilesFuentes, generalesFuentes, type Fuente } from '@/config/fuentes';
 
 /**
  * Índice de búsqueda global (estilo "buscador de menús" de Odoo).
@@ -38,6 +38,7 @@ const FUENTES_BY_CERT: Record<string, Fuente[]> = {
   usuarios: fuentes,
   'base-datos': bdFuentes,
   perfiles: perfilesFuentes,
+  'generales-especiales': generalesFuentes,
 };
 
 /** Recorre el árbol acumulando la ruta de etiquetas hasta cada hoja con href. */

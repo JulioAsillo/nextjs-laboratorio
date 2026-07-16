@@ -228,6 +228,41 @@ export const perfilesFuentes: Fuente[] = [
   { id: 'entra-id', label: 'Entra ID', group: 'Otros Reportes', appsKey: 'entraid', slots: one('entra_id', COLUMNS.entraId) },
 ];
 
+/* ═════════════ Certificación de GENERALES Y ESPECIALES ═══════════════════
+ *
+ * Mismo mecanismo que Usuarios/Perfiles: esta lista referencia los conjuntos de
+ * `COLUMNS` de arriba. El estado de "cargado" de esta pantalla se aísla por su
+ * propia caché (CACHE_KEY = 'cargar:generales').
+ *
+ * ⚠️ TODO(Julio): confirmar la lista definitiva de fuentes. De momento se
+ * incluyen solo las compartidas ("Otros Reportes"), que ya existen en el backend
+ * y no requieren endpoints nuevos. Agregar una fuente propia es UNA línea:
+ *   1) si sus columnas son nuevas -> agregarlas a `COLUMNS` arriba;
+ *   2) agregar aquí `{ id, label, group, appsKey, slots: one(fileName, COLUMNS.x) }`.
+ */
+export const generalesFuentes: Fuente[] = [
+  // ---------- Aplicaciones ----------
+  // TODO(Julio): fuentes propias de Generales y Especiales.
+
+  // ---------- Otros Reportes (MISMO backend que Usuarios) ----------
+  {
+    id: 'ad', label: 'Active Directory', group: 'Otros Reportes', appsKey: 'ad',
+    slots: [
+      { fileName: 'ad_pps', label: 'AD PPS', columns: COLUMNS.ad },
+      { fileName: 'ad_vida', label: 'AD Vida', columns: COLUMNS.ad },
+    ],
+  },
+  {
+    id: 'gdh', label: 'GDH', group: 'Otros Reportes', appsKey: 'gdh',
+    slots: [
+      { fileName: 'activos_gdh', label: 'Activos GDH', columns: COLUMNS.gdhActivos },
+      { fileName: 'cesados_gdh', label: 'Cesados GDH', columns: COLUMNS.gdhCesados },
+    ],
+  },
+  { id: 'dni-vs-usuarios', label: 'DNI vs Usuarios', group: 'Otros Reportes', appsKey: 'dnivsuser', slots: one('dni_vs_usuarios', COLUMNS.dniVsUsuarios) },
+  { id: 'entra-id', label: 'Entra ID', group: 'Otros Reportes', appsKey: 'entraid', slots: one('entra_id', COLUMNS.entraId) },
+];
+
 /* ═══════════════════ Certificación de BASE DE DATOS ══════════════════════
  *
  * Vida/Generales: backend propio /datos/dbs, multi-archivo -> se unifican en 1
