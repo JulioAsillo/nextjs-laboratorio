@@ -1,139 +1,48 @@
 import * as XLSX from 'xlsx';
+import { readSheetAsText } from '@/lib/excel/read-as-text';
 
-const norm = (s: string) => s.trim().replace(/\s+/g, ' ').toUpperCase();
+const norm = (s: string) =>
+  s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toUpperCase();
 
-const XLSX_MIME =
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 /** Nombre de la columna de procedencia que se agrega al unificar (opt-in). */
 export const ORIGIN_COLUMN = 'ORIGIN_FILE';
 
-/* ────────────────────────────────────────────────────────────────────────
- * Fechas -> texto.
- *
- * Solo se usa como FALLBACK cuando la celda de tipo fecha no trae texto
- * mostrado (`.w`). En el caso normal se respeta EXACTAMENTE lo que el usuario
- * ve en su reporte (dd/mm/yyyy, dd/mm/yyyy HH:mm:ss, etc.), evitando imponer un
- * formato propio. Si el backend necesitara un formato canónico (p.ej. ISO
- * yyyy-mm-dd), cambiar únicamente esta función.
- * ──────────────────────────────────────────────────────────────────────── */
-function pad(n: number): string {
-  return n < 10 ? `0${n}` : String(n);
-}
-
-function formatDateFallback(d: Date): string {
-  const date = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
-  const hasTime = d.getHours() || d.getMinutes() || d.getSeconds();
-  if (!hasTime) return date;
-  return `${date} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-}
-
 /**
- * Convierte CUALQUIER celda de SheetJS a texto plano determinístico.
- *  - Fechas (t='d'): se respeta el texto mostrado `.w`; si no existe, se formatea.
- *  - Booleanos (t='b'): 'TRUE' / 'FALSE'.
- *  - Números (t='n'): el valor crudo como string (sin separadores de miles ni
- *    símbolos), para no corromper códigos/importes al enviarlos al backend.
- *  - Texto / resto: el valor tal cual.
- * Nunca devuelve `null`/`undefined`: las celdas vacías quedan como ''.
+ * Reordena/normaliza una fila a las columnas canónicas (match por cabecera
+ * normalizada, tolerante a tildes/mayúsculas/espacios). Lo que no está en
+ * `columns` se descarta; lo que falta queda como '' (celda de texto vacía).
  */
-function cellToText(cell: XLSX.CellObject | undefined): string {
-  if (!cell) return '';
-  const shown = typeof cell.w === 'string' ? cell.w : undefined;
-
-  switch (cell.t) {
-    case 'd': {
-      if (shown && shown.trim() !== '') return shown;
-      const v = cell.v;
-      if (v instanceof Date) return formatDateFallback(v);
-      return v == null ? '' : String(v);
-    }
-    case 'b':
-      return cell.v ? 'TRUE' : 'FALSE';
-    case 'n':
-      return cell.v == null ? '' : String(cell.v);
-    case 'e':
-      return ''; // errores de Excel (#N/A, #REF!...) -> vacío
-    default:
-      return cell.v == null ? (shown ?? '') : String(cell.v);
-  }
-}
-
-interface DecodedSheet {
-  headers: string[];
-  rows: Record<string, string>[];
-}
-
-/**
- * Recorre la primera hoja celda por celda (preservando el TIPO real de cada
- * una) y devuelve las filas ya convertidas a texto, indexadas por su cabecera
- * original. No usa `sheet_to_json`, que reintroduce inferencia de tipos.
- */
-function decodeSheetAsText(ws: XLSX.WorkSheet): DecodedSheet {
-  const ref = ws['!ref'];
-  if (!ref) return { headers: [], rows: [] };
-
-  const range = XLSX.utils.decode_range(ref);
-  const headers: string[] = [];
-
-  for (let c = range.s.c; c <= range.e.c; c++) {
-    const addr = XLSX.utils.encode_cell({ r: range.s.r, c });
-    const text = cellToText(ws[addr] as XLSX.CellObject | undefined);
-    headers.push(text || `COL_${c + 1}`);
-  }
-
-  const rows: Record<string, string>[] = [];
-  for (let r = range.s.r + 1; r <= range.e.r; r++) {
-    const row: Record<string, string> = {};
-    let hasValue = false;
-    for (let c = range.s.c; c <= range.e.c; c++) {
-      const addr = XLSX.utils.encode_cell({ r, c });
-      const text = cellToText(ws[addr] as XLSX.CellObject | undefined);
-      if (text !== '') hasValue = true;
-      row[headers[c - range.s.c]] = text;
-    }
-    if (hasValue) rows.push(row); // ignora filas totalmente vacías
-  }
-
-  return { headers, rows };
-}
-
-/**
- * Lee un archivo (csv/xls/xlsx) y devuelve sus filas como texto plano.
- *  - `cellDates`: las celdas con formato de fecha llegan como `Date` reales
- *    (así se detectan aunque el backend luego las quiera como texto).
- *  - `cellText`: puebla `.w` (texto mostrado) en todas las celdas, para
- *    respetar el formato que el usuario ve.
- */
-async function readRowsAsText(file: File): Promise<Record<string, string>[]> {
-  const buffer = await file.arrayBuffer();
-  const wb = XLSX.read(buffer, { type: 'array', cellDates: true, cellText: true });
-  const sheetName = wb.SheetNames[0];
-  if (!sheetName) return [];
-  return decodeSheetAsText(wb.Sheets[sheetName]).rows;
-}
-
-/** Reordena/normaliza una fila a las columnas canónicas (match por cabecera normalizada). */
 function normalizeRow(row: Record<string, string>, columns: string[]): Record<string, string> {
   const lut = new Map<string, string>();
   for (const [k, v] of Object.entries(row)) lut.set(norm(k), v);
   const out: Record<string, string> = {};
   for (const col of columns) {
     const v = lut.get(norm(col));
-    out[col] = v == null ? '' : v; // vacío como '' (no null) -> celda de texto vacía
+    out[col] = v == null ? '' : v;
   }
   return out;
 }
 
-/** Fuerza t='s' (texto) en todas las celdas de datos y elimina cualquier formato numérico. */
+/**
+ * Fuerza t='s' (texto) y formato '@' (Texto) en TODAS las celdas, y elimina
+ * cualquier formato numérico heredado. Con `z='@'` el backend (pandas/openpyxl)
+ * lee la columna como string y no vuelve a inferir fechas.
+ */
 function forceAllCellsAsText(ws: XLSX.WorkSheet): void {
   for (const addr of Object.keys(ws)) {
     if (addr[0] === '!') continue;
     const cell = ws[addr] as XLSX.CellObject;
     cell.t = 's';
     cell.v = cell.v == null ? '' : String(cell.v);
+    cell.z = '@';
     delete (cell as { w?: string }).w;
-    delete (cell as { z?: string }).z;
   }
 }
 
@@ -156,10 +65,9 @@ export interface MergeOptions {
  * `columns` y devuelve UN solo .xlsx en memoria, listo para subir al backend.
  * Todo ocurre en el navegador (caché), sin tocar disco.
  *
- * TODAS las columnas se escriben como TEXTO (t='s'). Esto evita que las fechas
- * viajen como serial numérico de Excel (la causa de que el backend "recibiera
- * algo raro" y no procesara bien las fechas): ahora llegan como el mismo texto
- * que el usuario ve en su reporte.
+ * TODAS las columnas se escriben como TEXTO (t='s', z='@'). Las fechas viajan
+ * como el MISMO texto que el usuario ve en su reporte: nunca como serial de
+ * Excel, nunca reformateadas por SheetJS (ver `@/lib/excel/read-as-text`).
  *
  * Si `options.originColumn` está presente, se anexa esa columna al final con el
  * nombre del archivo de origen de cada fila (no se toca el orden de `columns`).
@@ -178,7 +86,7 @@ export async function mergeFilesToXlsx(
 
   let sourceCount = 0;
   for (const file of files) {
-    const rows = await readRowsAsText(file);
+    const { rows } = await readSheetAsText(file);
     for (const raw of rows) {
       const normalized = normalizeRow(raw, columns);
       if (originColumn) normalized[originColumn] = file.name;
@@ -187,7 +95,7 @@ export async function mergeFilesToXlsx(
     sourceCount += 1;
   }
 
-  const ws = XLSX.utils.aoa_to_sheet(aoa); // strings -> celdas t='s'
+  const ws = XLSX.utils.aoa_to_sheet(aoa, { cellDates: false }); // strings -> celdas t='s'
   forceAllCellsAsText(ws); // garantía extra: nada queda como número/fecha
 
   const wb = XLSX.utils.book_new();
