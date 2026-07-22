@@ -24,39 +24,39 @@ export const columns: ColumnDef[] = [
 
   // --- C2 ---
   { key: 'dni', header: 'DNI', group: 'C2', widthPx: 120, width: 14 },
-  { key: 'tipo_dnivsuser', header: 'TIPO_dnivsuser', group: 'C2', widthPx: 160, width: 18 },
-  { key: 'Usuario_dnivsuser', header: 'Usuario_dnivsuser', group: 'C2', widthPx: 180, width: 20 },
-  { key: 'COMENTARIO_dnivsuser', header: 'COMENTARIO_dnivsuser', group: 'C2', widthPx: 260, width: 30 },
+  { key: 'tipo_usuario_dnivsuser', header: 'TIPO_dnivsuser', group: 'C2', widthPx: 160, width: 18 },
+  { key: 'usuario_dnivsuser', header: 'Usuario_dnivsuser', group: 'C2', widthPx: 180, width: 20 },
+  { key: 'comentario_dnivsuser', header: 'COMENTARIO_dnivsuser', group: 'C2', widthPx: 260, width: 30 },
 
   // --- C1 ---
-  { key: 'Tipo Colaborador', header: 'Tipo Colaborador', group: 'C1', widthPx: 160, width: 18 },
+  { key: 'tipo_colaborador', header: 'Tipo Colaborador', group: 'C1', widthPx: 160, width: 18 },
   
   // ---- C7 ---
-  { key: 'Estado Entra ID', header: 'Estado Entra ID', group: 'C7', widthPx: 120, width: 14 },
-  { key: 'Fecha Creacion Entra ID', header: 'Fecha Creacion Entra ID', group: 'C7', widthPx: 120, width: 14, isDate: true},
-  { key: 'Fecha Login Entra ID', header: 'Fecha Login Entra ID', group: 'C7', widthPx: 120, width: 14, isDate: true },
-  { key: 'FaxNumber Entra ID', header: 'FaxNumber Entra ID', group: 'C7', widthPx: 120, width: 14},
+  { key: 'estado_entra_id', header: 'Estado Entra ID', group: 'C7', widthPx: 120, width: 14 },
+  { key: 'fecha_creacion_entra_id', header: 'Fecha Creacion Entra ID', group: 'C7', widthPx: 120, width: 14, isDate: true},
+  { key: 'fecha_login_entra_id', header: 'Fecha Login Entra ID', group: 'C7', widthPx: 120, width: 14, isDate: true },
+  { key: 'faxnumber_entra_id', header: 'FaxNumber Entra ID', group: 'C7', widthPx: 120, width: 14},
 
   // --- C3 ---
-  { key: 'Username AD PPS', header: 'Username AD PPS', group: 'C3', widthPx: 180, width: 20 },
-  { key: 'DNI AD PPS', header: 'DNI AD PPS', group: 'C3', widthPx: 150, width: 16 },
+  { key: 'username_ad_pps', header: 'Username AD PPS', group: 'C3', widthPx: 180, width: 20 },
+  { key: 'dni_ad_pps', header: 'DNI AD PPS', group: 'C3', widthPx: 150, width: 16 },
 
   // --- C4 ---
-  { key: 'Username AD VIDA', header: 'Username AD VIDA', group: 'C4', widthPx: 180, width: 20 },
-  { key: 'DNI AD VIDA', header: 'DNI AD VIDA', group: 'C4', widthPx: 150, width: 16 },
+  { key: 'username_ad_vida', header: 'Username AD VIDA', group: 'C4', widthPx: 180, width: 20 },
+  { key: 'dni_ad_vida', header: 'DNI AD VIDA', group: 'C4', widthPx: 150, width: 16 },
 
   // --- C5 ---
-  { key: 'Activo GDH', header: 'Activo GDH', group: 'C5', widthPx: 120, width: 14 },
-  { key: 'Fecha Alta', header: 'Fecha Alta', group: 'C5', widthPx: 150, width: 16, isDate: true },
-  { key: 'Cesado GDH', header: 'Cesado GDH', group: 'C5', widthPx: 120, width: 14 },
-  { key: 'Fecha Cese', header: 'Fecha Cese', group: 'C5', widthPx: 150, width: 16, isDate: true },
+  { key: 'activo_gdh', header: 'Activo GDH', group: 'C5', widthPx: 120, width: 14 },
+  { key: 'fecha_alta', header: 'Fecha Alta', group: 'C5', widthPx: 150, width: 16, isDate: true },
+  { key: 'cesado_gdh', header: 'Cesado GDH', group: 'C5', widthPx: 120, width: 14 },
+  { key: 'fecha_cese', header: 'Fecha Cese', group: 'C5', widthPx: 150, width: 16, isDate: true },
 
   // --- C6 ---
-  { key: 'Ticket Cese', header: 'Ticket Cese', group: 'C6', widthPx: 150, width: 16 },
-  { key: 'Fecha Cierre Ticket Cese', header: 'Fecha Cierre Ticket Cese', group: 'C6', widthPx: 210, width: 22, isDate: true },
-  { key: 'Escenario', header: 'Escenario', group: 'C6', widthPx: 180, width: 18 },
-  { key: 'Responsable', header: 'Responsable', group: 'C6', widthPx: 150, width: 20 },
-  { key: 'Comentario', header: 'Comentario', group: 'C6', widthPx: 150, width: 20 },
+  { key: 'ticket_cese', header: 'Ticket Cese', group: 'C6', widthPx: 150, width: 16 },
+  { key: 'fecha_cierre_ticket_cese', header: 'Fecha Cierre Ticket Cese', group: 'C6', widthPx: 210, width: 22, isDate: true },
+  { key: 'escenario', header: 'Escenario', group: 'C6', widthPx: 180, width: 18 },
+  { key: 'responsable', header: 'Responsable', group: 'C6', widthPx: 150, width: 20 },
+  { key: 'comentario', header: 'Comentario', group: 'C6', widthPx: 150, width: 20 },
 ];
 
 export const totalWidthPx = columns.reduce((acc, c) => acc + c.widthPx, 0);
@@ -71,17 +71,18 @@ function pickColumns(keys: string[]): ColumnDef[] {
 
 // H1 (Escenario 1 · Cesados Activos)
 export const h1Columns: ColumnDef[] = pickColumns([
-  'Aplicación', 'Usuario', 'Estado', 'Fecha Creación', 'Fecha Ultimo Login',
-  'DNI', 'Tipo Colaborador', 'Username AD PPS', 'Username AD VIDA',
-  'Estado Entra ID', 'Fecha Creacion Entra ID', 'Fecha Login Entra ID',
-  'Activo GDH', 'Cesado GDH', 'Fecha Cese', 'Ticket Cese',
-  'Fecha Cierre Ticket Cese', 'Escenario', 'Responsable', 'Comentario',
+  'aplicacion', 'usuario', 'estado', 'fecha_creacion', 'fecha_ultimo_login',
+  'dni', 'tipo_colaborador', 'username_ad_pps', 'username_ad_vida',
+  'estado_entra_id', 'fecha_creacion_entra_id', 'fecha_login_entra_id',
+  'activo_gdh', 'cesado_gdh', 'fecha_cese', 'ticket_cese',
+  'fecha_cierre_ticket_cese', 'escenario', 'responsable', 'comentario',
 ]);
 
 // H2 (Escenario 2 · No Identificados): igual que H1 pero SIN "Fecha Cese".
 export const h2Columns: ColumnDef[] = pickColumns([
-  'Aplicación', 'Usuario', 'Estado', 'Fecha Creación', 'Fecha Ultimo Login',
-  'DNI', 'Tipo Colaborador', 'Username AD PPS', 'Username AD VIDA',
-  'Activo GDH', 'Cesado GDH', 'Ticket Cese',
-  'Fecha Cierre Ticket Cese', 'Escenario', 'Responsable', 'Comentario',
+  'aplicacion', 'usuario', 'estado', 'fecha_creacion', 'fecha_ultimo_login',
+  'dni', 'tipo_colaborador', 'username_ad_pps', 'username_ad_vida',
+  'estado_entra_id', 'fecha_creacion_entra_id', 'fecha_login_entra_id',
+  'activo_gdh', 'cesado_gdh', 'ticket_cese',
+  'fecha_cierre_ticket_cese', 'escenario', 'responsable', 'comentario',
 ]);
