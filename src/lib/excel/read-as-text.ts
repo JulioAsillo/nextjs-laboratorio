@@ -183,6 +183,26 @@ function date1904Of(wb: XLSX.WorkBook): boolean {
   return wb.Workbook?.WBProps?.date1904 === true;
 }
 
+/**
+ * Limpia una cabecera de basura invisible SIN alterar su forma legible:
+ *  - BOM / zero-width / soft-hyphen / word-joiner (se cuelan en exports)
+ *  - comillas envolventes (rectas y tipográficas) que pega Excel/PowerShell
+ *  - NBSP/tab/saltos -> espacio; recorta y colapsa espacios
+ *
+ * Se preservan tildes y mayúsculas (esto NO es `normHeader`): así la columna
+ * del archivo unificado conserva su nombre real, pero sin caracteres fantasma
+ * que rompan el match o ensucien el .xlsx de salida.
+ */
+function sanitizeHeader(s: string): string {
+  return s
+    .replace(/[\uFEFF\u200B\u200C\u200D\u00AD\u2060]/g, '') // invisibles
+    .replace(/[\u00A0\t\r\n]+/g, ' ') // NBSP/tab/saltos -> espacio
+    .trim()
+    .replace(/^["'\u201C\u2018\u201D\u2019]+|["'\u201C\u2018\u201D\u2019]+$/g, '') // comillas envolventes
+    .trim()
+    .replace(/\s+/g, ' '); // colapsa espacios internos
+}
+
 export interface SheetAsText {
   headers: string[];
   rows: Record<string, string>[];
@@ -202,7 +222,7 @@ export function decodeSheetAsText(ws: XLSX.WorkSheet, opts: TextReadOptions = {}
 
   for (let c = range.s.c; c <= range.e.c; c++) {
     const addr = XLSX.utils.encode_cell({ r: range.s.r, c });
-    const text = cellToText(ws[addr] as XLSX.CellObject | undefined, opts).trim();
+    const text = sanitizeHeader(cellToText(ws[addr] as XLSX.CellObject | undefined, opts));
     headers.push(text || `COL_${c + 1}`);
   }
 
@@ -243,7 +263,7 @@ export async function readHeadersAsText(file: File): Promise<string[]> {
   const out: string[] = [];
   for (let c = range.s.c; c <= range.e.c; c++) {
     const addr = XLSX.utils.encode_cell({ r: range.s.r, c });
-    const text = cellToText(ws[addr] as XLSX.CellObject | undefined, opts).trim();
+    const text = sanitizeHeader(cellToText(ws[addr] as XLSX.CellObject | undefined, opts));
     if (text !== '') out.push(text);
   }
   return out;

@@ -15,16 +15,16 @@ export const KEY_RESPONSABLE = 'Responsable';
 
 export const columns: ColumnDef[] = [
   // --- C1 ---
-  { key: 'Tipo Aplicación', header: 'Tipo Aplicación', group: 'C1', widthPx: 150, width: 18 },
-  { key: 'Aplicación', header: 'Aplicación', group: 'C1', widthPx: 180, width: 22 },
-  { key: 'Usuario', header: 'Usuario', group: 'C1', widthPx: 150, width: 18 },
-  { key: 'Estado', header: 'Estado', group: 'C1', widthPx: 120, width: 14 },
-  { key: 'Fecha Creación', header: 'Fecha Creación', group: 'C1', widthPx: 150, width: 16, isDate: true },
-  { key: 'Fecha Ultimo Login', header: 'Fecha Ultimo Login', group: 'C1', widthPx: 150, width: 16, isDate: true },
+  { key: 'tipo_aplicacion', header: 'Tipo Aplicación', group: 'C1', widthPx: 150, width: 18 },
+  { key: 'aplicacion', header: 'Aplicación', group: 'C1', widthPx: 180, width: 22 },
+  { key: 'usuario', header: 'Usuario', group: 'C1', widthPx: 150, width: 18 },
+  { key: 'estado', header: 'Estado', group: 'C1', widthPx: 120, width: 14 },
+  { key: 'fecha_creacion', header: 'Fecha Creación', group: 'C1', widthPx: 150, width: 16, isDate: true },
+  { key: 'fecha_ultimo_login', header: 'Fecha Ultimo Login', group: 'C1', widthPx: 150, width: 16, isDate: true },
 
   // --- C2 ---
-  { key: 'DNI', header: 'DNI', group: 'C2', widthPx: 120, width: 14 },
-  { key: 'TIPO_dnivsuser', header: 'TIPO_dnivsuser', group: 'C2', widthPx: 160, width: 18 },
+  { key: 'dni', header: 'DNI', group: 'C2', widthPx: 120, width: 14 },
+  { key: 'tipo_dnivsuser', header: 'TIPO_dnivsuser', group: 'C2', widthPx: 160, width: 18 },
   { key: 'Usuario_dnivsuser', header: 'Usuario_dnivsuser', group: 'C2', widthPx: 180, width: 20 },
   { key: 'COMENTARIO_dnivsuser', header: 'COMENTARIO_dnivsuser', group: 'C2', widthPx: 260, width: 30 },
 
@@ -73,6 +73,7 @@ function pickColumns(keys: string[]): ColumnDef[] {
 export const h1Columns: ColumnDef[] = pickColumns([
   'Aplicación', 'Usuario', 'Estado', 'Fecha Creación', 'Fecha Ultimo Login',
   'DNI', 'Tipo Colaborador', 'Username AD PPS', 'Username AD VIDA',
+  'Estado Entra ID', 'Fecha Creacion Entra ID', 'Fecha Login Entra ID',
   'Activo GDH', 'Cesado GDH', 'Fecha Cese', 'Ticket Cese',
   'Fecha Cierre Ticket Cese', 'Escenario', 'Responsable', 'Comentario',
 ]);
