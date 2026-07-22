@@ -41,20 +41,116 @@ import * as XLSX from 'xlsx';
 /** Reemplazo U+FFFD: señal de que la decodificación UTF-8 falló. */
 const REPLACEMENT = '\uFFFD';
 
+/**
+ * Quita el BOM UTF-8 (EF BB BF) a NIVEL DE BYTES, antes de decodificar.
+ *
+ * Es clave hacerlo aquí y no con un `.replace(/^\uFEFF/, '')` sobre el texto:
+ * si luego cae el fallback windows-1252, esos tres bytes se decodifican como el
+ * fantasma "ï»¿" (ï=EF, »=BB, ¿=BF), que YA no es U+FEFF y ninguna limpieza de
+ * invisibles lo atrapa. Ese "ï»¿id" es exactamente el bug del reporte de Entra
+ * ID: la columna `id` no matcheaba porque llegaba como "ï»¿id".
+ */
+function stripBomBytes(bytes: Uint8Array): Uint8Array {
+  return bytes.length >= 3 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf
+    ? bytes.subarray(3)
+    : bytes;
+}
+
 /** Decodifica bytes a texto: UTF-8 y, si hay basura, reintenta windows-1252. */
 function decodeText(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
+  const bytes = stripBomBytes(new Uint8Array(buffer));
   const utf8 = new TextDecoder('utf-8').decode(bytes);
-  if (!utf8.includes(REPLACEMENT)) return utf8.replace(/^\uFEFF/, '');
+  if (!utf8.includes(REPLACEMENT)) return utf8;
   try {
-    return new TextDecoder('windows-1252').decode(bytes).replace(/^\uFEFF/, '');
+    return new TextDecoder('windows-1252').decode(bytes);
   } catch {
-    return utf8.replace(/^\uFEFF/, '');
+    return utf8;
   }
 }
 
 function isCsv(fileName: string): boolean {
   return /\.(csv|txt)$/i.test(fileName);
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  DESANIDADO DE CSV DOBLE-ENCODEADO
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * PATOLOGÍA (reportes AD PPS / AD VIDA)
+ * -------------------------------------
+ * El generador serializó el CSV DOS veces: tomó una fila que ya era CSV
+ *   samaccountname,"facsimiletelephonenumber","ipphone",...
+ * y la volvió a escribir como UNA sola celda de otro CSV, duplicando comillas:
+ *   "samaccountname,""facsimiletelephonenumber"",""ipphone"",..."
+ *
+ * Leído bien (RFC 4180), SheetJS ve UNA única columna cuyo nombre es toda esa
+ * cadena -> las 17 columnas requeridas salen como "faltantes" y aparece 1
+ * columna gigante "no reconocida". El fix reconstruye la capa interna.
+ *
+ * ESTRATEGIA (determinística, sin heurísticas frágiles)
+ * -----------------------------------------------------
+ *  - Solo se activa si el texto HUELE a doble-encodeo: empieza por `"` y su
+ *    primera línea contiene `""` (comillas duplicadas a nivel de fila). Un CSV
+ *    normal ni siquiera entra al bucle (coste cero en el caso común).
+ *  - Se parsea; si hay >1 columna, ya está desplegado -> se devuelve tal cual.
+ *  - Si hay 1 sola columna Y su cabecera contiene coma, esa celda ERA una fila
+ *    CSV: se reconstruye el texto interno (cada fila = su única celda) y se
+ *    repite. Máx. 3 capas por seguridad; si no hay avance, se corta.
+ *
+ * Una columna legítima única (p. ej. "ID" sin comas) NO se toca.
+ */
+function csvColCount(ws: XLSX.WorkSheet): number {
+  const ref = ws['!ref'];
+  if (!ref) return 0;
+  const r = XLSX.utils.decode_range(ref);
+  return r.e.c - r.s.c + 1;
+}
+
+function csvHeaderCell(ws: XLSX.WorkSheet): string {
+  const ref = ws['!ref'];
+  if (!ref) return '';
+  const r = XLSX.utils.decode_range(ref);
+  const cell = ws[XLSX.utils.encode_cell({ r: r.s.r, c: r.s.c })] as XLSX.CellObject | undefined;
+  return cell?.v == null ? '' : String(cell.v);
+}
+
+function firstCsvSheet(text: string): XLSX.WorkSheet | null {
+  const wb = XLSX.read(text, { type: 'string', raw: true, cellDates: false, cellNF: false, cellText: false });
+  const name = wb.SheetNames[0];
+  return name ? wb.Sheets[name] : null;
+}
+
+function looksDoubleEncoded(text: string): boolean {
+  if (text.charCodeAt(0) !== 0x22 /* " */) return false;
+  const nl = text.indexOf('\n');
+  const firstLine = nl === -1 ? text : text.slice(0, nl);
+  return firstLine.includes('""');
+}
+
+function unwrapDoubledCsv(text: string): string {
+  if (!looksDoubleEncoded(text)) return text;
+
+  let current = text;
+  for (let layer = 0; layer < 3; layer++) {
+    const ws = firstCsvSheet(current);
+    if (!ws) return current;
+    if (csvColCount(ws) !== 1) return current; // ya desplegado en columnas reales
+    if (!csvHeaderCell(ws).includes(',')) return current; // 1 columna legítima (sin coma)
+
+    const ref = ws['!ref'];
+    if (!ref) return current;
+    const range = XLSX.utils.decode_range(ref);
+    const lines: string[] = [];
+    for (let r = range.s.r; r <= range.e.r; r++) {
+      const cell = ws[XLSX.utils.encode_cell({ r, c: range.s.c })] as XLSX.CellObject | undefined;
+      lines.push(cell?.v == null ? '' : String(cell.v));
+    }
+    const inner = lines.join('\n');
+    if (inner === current) return current; // sin progreso -> corta
+    current = inner;
+  }
+  return current;
 }
 
 const pad = (n: number) => (n < 10 ? `0${n}` : String(n));
@@ -156,7 +252,10 @@ async function readWorkbook(file: File, sheetRows?: number): Promise<XLSX.WorkBo
 
   if (isCsv(file.name)) {
     // `raw: true` => el parser CSV no interpreta fechas ni números: todo string.
-    return XLSX.read(decodeText(buffer), {
+    // `unwrapDoubledCsv` deshace el CSV doble-encodeado (toda la fila metida
+    // como una sola celda entre comillas) antes de parsear. Filas y cabeceras
+    // salen del MISMO texto ya desanidado, así que quedan siempre alineadas.
+    return XLSX.read(unwrapDoubledCsv(decodeText(buffer)), {
       type: 'string',
       raw: true,
       cellDates: false,
@@ -195,6 +294,7 @@ function date1904Of(wb: XLSX.WorkBook): boolean {
  */
 function sanitizeHeader(s: string): string {
   return s
+    .replace(/^\u00EF\u00BB\u00BF/, '') // "ï»¿" = BOM mal decodeado (solo al inicio)
     .replace(/[\uFEFF\u200B\u200C\u200D\u00AD\u2060]/g, '') // invisibles
     .replace(/[\u00A0\t\r\n]+/g, ' ') // NBSP/tab/saltos -> espacio
     .trim()

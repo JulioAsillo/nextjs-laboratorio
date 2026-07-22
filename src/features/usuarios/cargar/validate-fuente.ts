@@ -48,6 +48,7 @@ export const normHeader = (s: string) =>
   s
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '') // diacríticos combinantes (tildes, diéresis)
+    .replace(/^\u00EF\u00BB\u00BF/, '') // "ï»¿" = BOM mal decodeado (solo al inicio)
     .replace(INVISIBLES, '') // BOM, zero-width, soft-hyphen, word-joiner
     .replace(/[\u00A0\t\r\n]+/g, ' ') // NBSP / tab / saltos -> espacio normal
     .trim()
