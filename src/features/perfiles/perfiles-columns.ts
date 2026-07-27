@@ -54,9 +54,11 @@ export const perfilesColumns: ColumnDef[] = [
   { key: 'Rol GDH', header: 'Rol GDH', group: 'C5', widthPx: 180, width: 20 },
 
   // --- C3 · AD PPS ---
+  { key: 'username_pps', header: 'Username PPS', group: 'C3', widthPx: 180, width: 30 },
   { key: 'Rol AD PPS', header: 'Rol AD PPS', group: 'C3', widthPx: 180, width: 20 },
 
   // --- C4 · AD VIDA ---
+  { key: 'username_vida', header: 'Username VIDA', group: 'C4', widthPx: 180, width: 30 },
   { key: 'Rol AD VIDA', header: 'Rol AD VIDA', group: 'C4', widthPx: 180, width: 20 },
 
   // --- C9 · Rol Final (calculado) ---
