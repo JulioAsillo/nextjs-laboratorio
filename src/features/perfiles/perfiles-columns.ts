@@ -60,6 +60,7 @@ export const perfilesColumns: ColumnDef[] = [
   // --- C4 · AD VIDA ---
   { key: 'username_vida', header: 'Username VIDA', group: 'C4', widthPx: 180, width: 30 },
   { key: 'Rol AD VIDA', header: 'Rol AD VIDA', group: 'C4', widthPx: 180, width: 20 },
+  { key: 'rol_ticket', header: 'Rol Ticket', group: 'C1', widthPx: 180, width: 20 },
 
   // --- C9 · Rol Final (calculado) ---
   { key: 'Rol Final', header: 'Rol Final', group: 'C9', widthPx: 180, width: 20 },
