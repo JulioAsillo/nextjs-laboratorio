@@ -118,6 +118,7 @@ export const COLUMNS = {
   /* ---- Solo Perfiles ---- */
   exactusPerfiles: ['USUARIO', 'GRUPO', 'NOMBRE', 'ESTADO', 'FECHA CREACION', 'TIPO'],
   matrizRoles: ['ROL', 'PERFIL ROL DEL ACTIVO', 'NOMBRE DEL ACTIVO', 'TIPO DE ROL', 'CODIGO FUNCION', 'FUNCION', 'CODIGO UO', 'UNIDAD ORGANIZATIVA', 'TIPO DE ACTIVO', 'DESCRIPCION', 'TICKET', 'MODIFIED', 'CREATED'],
+  rol_ticket: ['ELEMENTO DE SOLICITUD', 'NÚMERO DE DOCUMENTO', 'ROL ASIGNADO', '¿QUÉ ROL SE LE ASIGNARÁ?', 'CREADO', 'CERRADO'],
 
   /* ---- Solo Base de Datos ---- */
   bdVida: ['USERNAME', 'TYPE', 'TYPE_DESC', 'ISACTIVE', 'ULTIMOLOGEO', 'CREATED', 'UPDATE', 'DATABASEROLE', 'DATABASENAME', 'SERVERROLE'],
@@ -213,7 +214,7 @@ export const perfilesFuentes: Fuente[] = [
   { id: 'botmaker', label: 'Botmaker', group: 'Aplicaciones', appsKey: 'botmaker', slots: one('usuarios_botmaker', COLUMNS.botmaker) },
   // Reemplaza a "Exactus" de Usuarios: distinto destino/consulta y columnas propias.
   { id: 'exactus-perfiles', label: 'Exactus Perfiles', group: 'Aplicaciones', appsKey: 'exactus_pfl', slots: one('usuarios_perfiles_exactus', COLUMNS.exactusPerfiles) },
-
+  { id: 'rol-ticket', label: 'Rol Ticket', group: 'Aplicaciones', appsKey: 'rol_ticket', slots: one('rol_ticket', COLUMNS.rol_ticket) },
   // ---------- Otros Reportes ----------
   {
     id: 'ad', label: 'Active Directory', group: 'Otros Reportes', appsKey: 'ad',
